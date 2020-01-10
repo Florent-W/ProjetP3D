@@ -259,3 +259,14 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/Temp/UnityLockfile
+/Assets/AllSkyFree/AllSkyDemoEnvironment/Materials
+/Assets/AllSkyFree/AllSkyDemoEnvironment
+/Assets/AllSkyFree
+/Assets/PBC_Texture_RoadsPack_01/Textures
+/Assets/Rocks and Boulders 2
+/Assets/Coffee/UIExtensions/UIParticle/Shaders
+/Library/UIElements/EditorWindows
+/Library/PackageCache/com.unity.shadergraph@6.9.2/Editor/Drawing/Views
+/Assets/Coffee/UIExtensions/UIParticle
+/Assets/Coffee/UIExtensions/UIParticle
