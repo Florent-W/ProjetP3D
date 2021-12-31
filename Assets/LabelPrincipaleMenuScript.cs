@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class LabelPrincipaleMenuScript : MonoBehaviour
 {
+    [SerializeField]
+    private AudioClip bruitageBoutonPointeur;
     public bool boutonEstSelectionner = false;
 
     public void OnSelect(BaseEventData eventData)
@@ -25,6 +27,7 @@ public class LabelPrincipaleMenuScript : MonoBehaviour
 
     public void OnPointerEnter(BaseEventData eventData)
     {
+        this.gameObject.GetComponent<AudioSource>().PlayOneShot(bruitageBoutonPointeur);
         this.gameObject.GetComponent<Text>().fontSize = 80;
         this.gameObject.transform.parent.GetComponent<Image>().enabled = true;
         this.gameObject.transform.parent.gameObject.transform.GetChild(0).gameObject.SetActive(true);

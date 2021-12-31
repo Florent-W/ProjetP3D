@@ -1,9 +1,10 @@
 ﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 using System.Runtime.Serialization;
-using Doozy.Engine.UI;
+// using Doozy.Engine.UI;
 using System.Xml;
 using System.Xml.Serialization;
 using Cinemachine;
@@ -12,6 +13,9 @@ using UnityEngine.Playables;
 using UnityEngine.Timeline;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace ProjetP3DScene1
 {
@@ -21,164 +25,53 @@ namespace ProjetP3DScene1
         public Transform destinationPokeball;
         public Animator animator;
         public string EnCombatContre = null;
-        public bool EnCombat = false, jeuInitialiser = false;
-        public ClassLibrary.Personnage dresseurAdverse;
-        public GameObject pokemonAdverseGameObject;
+        public bool jeuInitialiser = false;
+        public ClassLibrary.Dresseur dresseurAdverse;
+        public GameObject pokemonJoueurGameObject, pokemonAdverseGameObject;
+        public JoueurManagerScript JoueurManager;
+
+        public GameObject uiPokemonGameObject; // Ui info du pokémon
+
+        [SerializeField]
+        private GameObject canvasGameObjectJoueur;
 
         public ClassLibrary.Jeu jeu = new ClassLibrary.Jeu(); // Parametres du jeu (attaque, pokemon)
-        ClassLibrary.Personnage Joueur = new ClassLibrary.Personnage();
-        ClassLibrary.Pokemon pokemon = new ClassLibrary.Pokemon();
+        public ClassLibrary.Pokemon pokemon = new ClassLibrary.Pokemon();
+        public GameObject[] canvasGameObject = new GameObject[2];
+        public GameObject[] cameraCombatJoueurs = new GameObject[2];
+        public GameObject[] controllerJoueurs = new GameObject[2];
+
+        public GameObject GameObjectMusique;
+        public GameObject GameObjectJoueur;
 
         ClassLibrary.Pokemon pokemonStarter = new ClassLibrary.Pokemon();
-        ClassLibrary.Pokemon pokemonJoueurSelectionner = new ClassLibrary.Pokemon();
 
-        ClassLibrary.Attaque attaqueLancerPokemon = new ClassLibrary.Attaque();
+        public ClassLibrary.Attaque attaqueLancerPokemon = new ClassLibrary.Attaque();
         ClassLibrary.Attaque attaqueLancerAdversaire = new ClassLibrary.Attaque();
 
-        bool jeuEnPause = false, starterChoisi = false,  gagnePvPokemonJoueur = false, pokemonJoueurAttaquePremier = true, changement_pokemon = false, changementPokemonPokemonKo = false, changementStatutPokemon = false, changementStatutAdversaire = false, showStatistiquesAugmenter = false, showStatistiquesNiveauSuivant = false, reussiteAttaque = false, reussiteAttaqueParalyse = false, reussiteAttaqueParalyseAdversaire = false, reussiteAttaqueGel = false, reussiteAttaqueGelAdversaire = false, messageBoitePCActif = false, OuverturePC = false;
-        int compteur = 0, compteurAdversaire = 0, compteurExperience = 0, positionPokemonMenuPokemon = 0, nbDegats = 0, nombreMouvementsBall = -1, statutPokemonPerdPvJoueur = 0, statutPokemonPerdPvAdversaire = 0, nombreTourStatut = 0, nombreTourStatutAdversaire = 0, nombreTourStatutAEffectuer = 0, nombreTourStatutAEffectuerAdversaire = 0, nombreTourSommeil = 0, nombreTourSommeilAdversaire = 0;
-        string MenuPauseActuel;
+        public int nbDegats = 0, nbDegatsContreAdversaire = 0;
+        public int positionPokemonMenuPokemon = 0;
+        public bool jeuEnPause = false;
+
+        public string modeCombat;
+
+        public GameObject mapGameObject;
+
+        public GameObject DialogueManagerGameObject;
+
+        bool gagnePvPokemonJoueur = false, pokemonJoueurAttaquePremier = true, changement_pokemon = false, changementPokemonPokemonKo = false, changementStatutPokemon = false, changementStatutAdversaire = false, showStatistiquesAugmenter = false, showStatistiquesNiveauSuivant = false, reussiteAttaque = false, reussiteAttaqueParalyse = false, reussiteAttaqueParalyseAdversaire = false, reussiteAttaqueGel = false, reussiteAttaqueGelAdversaire = false, coroutineBarreVieJoueurLancer = false, coroutineBarreVieAdversaireLancer = false, messageBoitePCActif = false, OuverturePC = false;
+        int compteur = 0, compteurAdversaire = 0, compteurExperience = 0, nombreMouvementsBall = -1, statutPokemonPerdPvJoueur = 0, statutPokemonPerdPvAdversaire = 0, nombreTourStatut = 0, nombreTourStatutAdversaire = 0, nombreTourStatutAEffectuer = 0, nombreTourStatutAEffectuerAdversaire = 0, nombreTourSommeil = 0, nombreTourSommeilAdversaire = 0;
         double bonusCritique = 1;
 
-        GameObject[] textNomPokemonMenu = new GameObject[6], pokemonMenu = new GameObject[6], numeroPokemonMenu = new GameObject[6], pvPokemonMenu = new GameObject[6], imagePokemonMenu = new GameObject[6], boutonStatistiquesPokemonMenu = new GameObject[6], boutonChoisirPokemonMenu = new GameObject[6];
-        GameObject boutons_attaque, boutons_combat, scroll_objets, listeObjetsContent, menu, menuPokemonStatistiques, menuStart, BoiteDialogue, barViePokemonJoueur, barViePokemonAdversaire, barExperiencePokemonJoueur, UICombat, UIJoueur, UIAdversaire, StatistiquesChangementNiveau, TableStarter, BoitePC, PokeballBulbizarre, PokeballSalameche, PokeballCarapuce, GameObjectJoueurCamera, GameObjectJoueur, pokemonJoueurGameObject, menuPC, cameraCombat, GameObjectMusique, DialogueManagerGameObject, ObjetProcheGameObject, sceneBuilder;
-        Image[] imagePokemonMenuImage = new Image[6];
+        GameObject boutons_attaque, boutons_combat, scroll_objets, listeObjetsContent, menu, menuPokemonStatistiques, menuStart, BoiteDialogue, barViePokemonJoueur, barViePokemonAdversaire, barExperiencePokemonJoueur, UICombat, UIJoueur, UIAdversaire, StatistiquesChangementNiveau, TableStarter, BoitePC, PokeballBulbizarre, PokeballSalameche, PokeballCarapuce, menuPC, cameraCombat, cameraCombatUI, cameraMapGameObject, ObjetProcheGameObject, sceneBuilder;
         Image barViePokemonJoueurImage, barViePokemonAdversaireImage, barExperiencePokemonJoueurImage;
         DialogueTrigger dialogueCombat;
         Text LabelPvPokemonJoueurUI, LabelPvPokemonAdversaireUI, LabelNiveauPokemonJoueurUI, BoiteDialogueTexte, LabelPvChangementNiveau, LabelAttaqueChangementNiveau, LabelDefenseChangementNiveau, LabelVitesseChangementNiveau, LabelAttaqueSpecialeChangementNiveau, LabelDefenseSpecialeChangementNiveau, LabelObjetProche;
-        Text[] pvPokemonMenuTexte = new Text[6];
         int[] positionPokemonMenu = new int[6];
-        Button[] boutonStatistiquesPokemonMenuBouton = new Button[6], textNomPokemonMenuBouton = new Button[6];
-        Button[] boutonChoisirPokemonMenuBouton2 = new Button[6], boutonChoisirPokemonMenuBouton = new Button[6];
         Animator BoiteDialogueAnimator;
-        PlayableDirector TimelineAnimationLancerPokeball, TimelineCameraCombat;
-        DirectoryInfo Chemin;
-        FileInfo[] FichiersMusiqueCombat;
-
-        /// <summary>
-        /// Cette méthode permet de créer et de récupérer un GameObject Texte
-        /// </summary>
-        /// <returns>Récupère un GameObject de texte</returns>
-        GameObject CreateText(Transform canvas_transform, string nameGameObject, float width, float height, float x, float y, string text_to_print, int font_size, int min_font_size, int max_size_font, Color text_color)
-        {
-            GameObject UItextGO = new GameObject(nameGameObject);
-            UItextGO.transform.SetParent(canvas_transform);
-
-            RectTransform transform = UItextGO.AddComponent<RectTransform>();
-            transform.sizeDelta = new Vector2(width, height);
-            transform.anchoredPosition = new Vector2(x, y);
-            transform.localScale = new Vector3(1, 1, 1);
-
-            Text text = UItextGO.AddComponent<Text>();
-            text.text = text_to_print;
-
-            if (min_font_size > 0 || max_size_font > 0)
-            {
-                text.resizeTextForBestFit = true;
-                text.resizeTextMinSize = min_font_size;
-                text.resizeTextMaxSize = max_size_font;
-            }
-            else
-            {
-                text.fontSize = font_size;
-            }
-
-            text.color = text_color;    
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-
-            return UItextGO;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de créer et de récupérer un GameObject de Bouton
-        /// </summary>
-        /// <returns>Récupère un GameObject de bouton</returns>
-        GameObject CreateButton(Transform canvas_transform, string nameGameObject, int bouton_width, int bouton_height, string text_to_print, int font_size)
-        {
-            DefaultControls.Resources uiResources = new DefaultControls.Resources();
-
-            GameObject uiButtonGameObject = DefaultControls.CreateButton(uiResources);
-            uiButtonGameObject.name = nameGameObject;
-            uiButtonGameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(bouton_width, bouton_height);
-            Text textUiButton = uiButtonGameObject.transform.GetChild(0).gameObject.GetComponent<Text>();
-            textUiButton.text = text_to_print;
-            textUiButton.fontSize = font_size;
-            uiButtonGameObject.transform.SetParent(canvas_transform.transform, false);
-
-            return uiButtonGameObject;
-        }
-
-        GameObject CreateButton(Transform canvas_transform, string nameGameObject, int bouton_width, int bouton_height, string text_to_print, int font_size, int x, int y)
-        {
-            DefaultControls.Resources uiResources = new DefaultControls.Resources();
-
-            GameObject uiButtonGameObject = DefaultControls.CreateButton(uiResources);
-            uiButtonGameObject.name = nameGameObject;
-            uiButtonGameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(bouton_width, bouton_height);
-            uiButtonGameObject.transform.localPosition = new Vector2(x, y);
-            Text textUiButton = uiButtonGameObject.transform.GetChild(0).gameObject.GetComponent<Text>();
-            textUiButton.text = text_to_print;
-            textUiButton.fontSize = font_size;
-            uiButtonGameObject.transform.SetParent(canvas_transform.transform, false);
-
-            return uiButtonGameObject;
-        }
-
-        public void Sauvegarde_Click()
-        {
-            // SaveFileDialog saveFileDialog = new SaveFileDialog();
-
-           // if (saveFileDialog.ShowDialog() == DialogResult.OK)
-           // {
-               // var cheminFichier = saveFileDialog.FileName;
-                string cheminFichier = Application.streamingAssetsPath + "/Joueur.xml";
-                XmlWriter writer = XmlWriter.Create(cheminFichier);
-
-                DataContractSerializer serializer = new DataContractSerializer(typeof(ClassLibrary.Personnage));
-
-                try
-                {
-                    serializer.WriteObject(writer, Joueur);
-                }
-                catch
-                {
-                  //  MessageBox.Show("Impossible de serialiser : " + Environment.NewLine + erreur);
-                }
-
-                writer.Close();
-            // }
-        }
-
-        public void Chargement_click()
-        {
-            // OpenFileDialog openFileDialog = new OpenFileDialog();
-
-            //   if (openFileDialog.ShowDialog() == DialogResult.OK)
-            //  {
-            //   var cheminFichier = openFileDialog.FileName;
-
-                string cheminFichier = Application.streamingAssetsPath + "/Joueur.xml";
-                DataContractSerializer serializer = new DataContractSerializer(typeof(ClassLibrary.Personnage));
-                FileStream fs = new FileStream(cheminFichier, FileMode.Open);
-
-                XmlDictionaryReader reader = XmlDictionaryReader.CreateTextReader(fs, new XmlDictionaryReaderQuotas());
-
-                try
-                {
-                 //   nombrePokemonAvantChargementSauvegarde = Joueur.getPokemonEquipe().Count;
-                    Joueur = (ClassLibrary.Personnage)serializer.ReadObject(reader);
-                   // rafraichirApresChargementSauvegarde();
-
-                }
-                catch
-                {
-                  //  MessageBox.Show("Impossible de deserialiser : " + erreur);
-                }
-                reader.Close();
-
-
-           }
-
+        PlayableDirector TimelineAnimationLancerPokeball, TimelinePokemonAccompagner, TimelineCameraCombat, TimelineAnimationCapture;
+        List<AudioClip> MusiquesCombat = new List<AudioClip>();        
+ 
         /*
         public void SauvegardeJoueur()
         {
@@ -194,34 +87,6 @@ namespace ProjetP3DScene1
         } */
 
         /// <summary>
-        /// Cette méthode permet d'enlever la pause
-        /// </summary>
-        void Resume()
-        {
-            //   jeu.getUIPopUpMenu().Hide();
-            Time.timeScale = 1f;
-           // Cursor.visible = false;
-           // Cursor.lockState = CursorLockMode.Locked;
-            menuStart.SetActive(false);
-        }
-
-        /// <summary>
-        /// Cette méthode permet d'activer la pause et le menu
-        /// </summary>
-        public void Pause()
-        {
-            rafraichirEquipe();
-            Time.timeScale = 0f;
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-            menuStart.SetActive(true);
-            EventSystem eventSystem = GameObject.Find("EventSystem").gameObject.GetComponent<EventSystem>();
-            eventSystem.SetSelectedGameObject(null);
-            eventSystem.SetSelectedGameObject(menuStart.transform.GetChild(0).gameObject);
-            MenuPauseActuel = "MenuStart";
-        }
-
-        /// <summary>
         /// Cette méthode permet de gérer la barre d'expérience du pokémon du joueur en combat
         /// </summary>
         public void rafraichirBarreExperiencePokemonJoueur()
@@ -232,14 +97,50 @@ namespace ProjetP3DScene1
             btn_soigner.Enabled = false;
             btn_changement_pokemon.Enabled = false; */
 
+            if (pokemon.getGainEvPv() > 0)
+            {
+                JoueurManager.Joueurs[0].pokemonSelectionner.setEvPv(JoueurManager.Joueurs[0].pokemonSelectionner.getEvPv() + pokemon.getGainEvPv());
+            }
+            if (pokemon.getGainEvAttaque() > 0)
+            {
+                JoueurManager.Joueurs[0].pokemonSelectionner.setEvAttaque(JoueurManager.Joueurs[0].pokemonSelectionner.getEvAttaque() + pokemon.getGainEvAttaque());
+            }
+            if (pokemon.getGainEvDefense() > 0)
+            {
+                JoueurManager.Joueurs[0].pokemonSelectionner.setEvDefense(JoueurManager.Joueurs[0].pokemonSelectionner.getEvDefense() + pokemon.getGainEvDefense());
+            }
+            if (pokemon.getGainEvVitesse() > 0)
+            {
+                JoueurManager.Joueurs[0].pokemonSelectionner.setEvVitesse(JoueurManager.Joueurs[0].pokemonSelectionner.getEvVitesse() + pokemon.getGainEvVitesse());
+            }
+            if (pokemon.getGainEvAttaqueSpeciale() > 0)
+            {
+                JoueurManager.Joueurs[0].pokemonSelectionner.setEvAttaqueSpeciale(JoueurManager.Joueurs[0].pokemonSelectionner.getEvAttaqueSpeciale() + pokemon.getGainEvAttaqueSpeciale());
+            }
+            if (pokemon.getGainEvDefenseSpeciale() > 0)
+            {
+                JoueurManager.Joueurs[0].pokemonSelectionner.setEvDefenseSpeciale(JoueurManager.Joueurs[0].pokemonSelectionner.getEvDefenseSpeciale() + pokemon.getGainEvDefenseSpeciale());
+            }
+
+            compteurExperience = (100 * (JoueurManager.Joueurs[0].pokemonSelectionner.getExperience() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn())) / (JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonProchainNiveau() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn());
+            double experienceGagner = JoueurManager.Joueurs[0].pokemonSelectionner.gainExperiencePokemonBattu(pokemon);
+
+            dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " a obtenu " + experienceGagner + " points d'expérience");
+            StartCoroutine(DialogueCombat());
+
+          //  statutPokemonPerdPvAdversaire = 0;
+
             StartCoroutine("timerBarreExperienceStart");
         }
 
-        public void DeclenchementCombat()
+        public void DeclenchementCombat(int positionJoueur)
         {
-            if (Joueur.getPokemonEquipe().Count > 0 && EnCombat == false)
+            if (JoueurManager.Joueurs[positionJoueur].getPokemonEquipe().Count > 0 && JoueurManager.Joueurs[positionJoueur].enCombat == false)
             {
-                EnCombat = true;
+                JoueurManager.Joueurs[positionJoueur].enCombat = true;
+
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
 
                 if (EnCombatContre != "PokemonSauvage")
                 {
@@ -253,50 +154,50 @@ namespace ProjetP3DScene1
                     Destroy(pokemonJoueurGameObject);
                 }
 
-                Destroy(GameObject.FindGameObjectWithTag("PokemonAdverse"));
+              // Destroy(GameObject.FindGameObjectWithTag("PokemonAdverse"));
+
+               // GameObjectJoueur.GetComponent<PokeballLancer>().lancerPokeball();
 
                 Vector3 destinationPositionPokeball = new Vector3(destinationPokeball.transform.position.x, destinationPokeball.transform.position.y, destinationPokeball.transform.position.z - 0.5f);
                 GameObject pokeball = (GameObject)Instantiate(Resources.Load("Models/Pokeballs/Pokeball"), destinationPositionPokeball, destinationPokeball.rotation, GameObjectJoueur.transform);
                 //  GameObject pokeball = Instantiate(pokeballInstance, destinationPositionPokeball, destinationPokeball.rotation);
                 Animator animatorPokeball = pokeball.GetComponent<Animator>();
-                SignalReceiver signalPokeball = pokeball.GetComponent<SignalReceiver>();
+                SignalReceiver signalPokeball = pokeball.GetComponent<SignalReceiver>(); 
 
-                int idPokedex = pokemonJoueurSelectionner.getNoIdPokedex();
+                int idPokedex = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getNoIdPokedex();
                 pokeball.GetComponent<AfterThrowingPokeball>().NumeroPokedexPokemon = idPokedex;
-
-                int NumeroMusiqueCombatChoisi = Random.Range(0, FichiersMusiqueCombat.Length);
-                string NomMusiqueCombatChoisi = Path.GetFileNameWithoutExtension(FichiersMusiqueCombat[NumeroMusiqueCombatChoisi].Name);
-
+         
                 AudioSource GameObjectMusiqueAudioSource = GameObjectMusique.GetComponent<AudioSource>();
 
-                GameObjectMusiqueAudioSource.clip = Resources.Load<AudioClip>("Musics/" + NomMusiqueCombatChoisi);
+                GameObjectMusiqueAudioSource.clip = MusiquesCombat[Random.Range(0, MusiquesCombat.Count)];
+
                 GameObjectMusiqueAudioSource.Play();
 
-                foreach (Transform child in UIJoueur.transform.GetChild(7).gameObject.transform)
+                foreach (Transform child in UIJoueur.transform.GetChild(8).gameObject.transform)
                 {
                     GameObject.Destroy(child.gameObject);
                 }
 
-                foreach (Transform child in UIAdversaire.transform.GetChild(5).gameObject.transform)
+                foreach (Transform child in UIAdversaire.transform.GetChild(6).gameObject.transform)
                 {
                     GameObject.Destroy(child.gameObject);
                 }
 
-                for (int i = 0; i < Joueur.getPokemonEquipe().Count; i++)
+                for (int i = 0; i < JoueurManager.Joueurs[positionJoueur].getPokemonEquipe().Count; i++)
                 {
                     try
                     {
                         Vector3 destinationPokeball = new Vector3(-350 + (90 * i), -40, 0);
-                        Quaternion rotationPokeball = Quaternion.Euler(0, 0, 0);
+                       // Quaternion rotationPokeball = Quaternion.Euler(0, 0, 0);
                         int nombrePokemon = i + 1;
 
                         GameObject pokeballMenu = new GameObject("Pokeball" + nombrePokemon + "Menu");
                         pokeballMenu.AddComponent<Image>();
                         pokeballMenu.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Pokeball/pokeball_3");
 
-                        pokeballMenu.transform.SetParent(UIJoueur.transform.GetChild(7).gameObject.transform);
+                        pokeballMenu.transform.SetParent(UIJoueur.transform.GetChild(8).gameObject.transform);
                         pokeballMenu.transform.localPosition = destinationPokeball;
-                        pokeballMenu.transform.rotation = rotationPokeball;
+                        pokeballMenu.transform.localRotation = Quaternion.identity;
                         pokeballMenu.transform.localScale = new Vector3(1, 1, 1);
 
                     }
@@ -311,16 +212,16 @@ namespace ProjetP3DScene1
                     try
                     {
                         Vector3 destinationPokeball = new Vector3(-350, 0, 0);
-                        Quaternion rotationPokeball = Quaternion.Euler(0, 0, 0);
+                        // Quaternion rotationPokeball = Quaternion.Euler(0, 0, 0);
                         int nombrePokemon = 0 + 1;
 
                         GameObject pokeballMenu = new GameObject("Pokeball" + nombrePokemon + "Menu");
                         pokeballMenu.AddComponent<Image>();
                         pokeballMenu.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Pokeball/pokeball_3");
 
-                        pokeballMenu.transform.SetParent(UIAdversaire.transform.GetChild(5).gameObject.transform);
+                        pokeballMenu.transform.SetParent(UIAdversaire.transform.GetChild(6).gameObject.transform);
                         pokeballMenu.transform.localPosition = destinationPokeball;
-                        pokeballMenu.transform.rotation = rotationPokeball;
+                        pokeballMenu.transform.localRotation = Quaternion.identity;
                         pokeballMenu.transform.localScale = new Vector3(1, 1, 1);
                     }
                     catch
@@ -336,16 +237,16 @@ namespace ProjetP3DScene1
                         try
                         {
                             Vector3 destinationPokeball = new Vector3(-350 + (90 * i), 0, 0);
-                            Quaternion rotationPokeball = Quaternion.Euler(0, 0, 0);
+                            // Quaternion rotationPokeball = Quaternion.Euler(0, 0, 0);
                             int nombrePokemon = i + 1;
 
                             GameObject pokeballMenu = new GameObject("Pokeball" + nombrePokemon + "Menu");
                             pokeballMenu.AddComponent<Image>();
                             pokeballMenu.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Pokeball/pokeball_3");
 
-                            pokeballMenu.transform.SetParent(UIAdversaire.transform.GetChild(5).gameObject.transform);
+                            pokeballMenu.transform.SetParent(UIAdversaire.transform.GetChild(6).gameObject.transform);
                             pokeballMenu.transform.localPosition = destinationPokeball;
-                            pokeballMenu.transform.rotation = rotationPokeball;
+                            pokeballMenu.transform.localRotation = Quaternion.identity;
                             pokeballMenu.transform.localScale = new Vector3(1, 1, 1);
 
                         }
@@ -355,25 +256,30 @@ namespace ProjetP3DScene1
                         }
                     }
                 }
-
+                
                 animator.Play("Throw pokeball");
 
                 TimelineAsset timelineAsset = (TimelineAsset)TimelineAnimationLancerPokeball.playableAsset;
                 TrackAsset trackAsset = timelineAsset.GetOutputTrack(2);
                 TrackAsset trackAsset2 = timelineAsset.GetOutputTrack(3);
+                TrackAsset trackAsset10 = timelineAsset.GetOutputTrack(11);
 
                 TimelineAnimationLancerPokeball.SetGenericBinding(trackAsset, animatorPokeball);
                 TimelineAnimationLancerPokeball.SetGenericBinding(trackAsset2, signalPokeball);
+                TimelineAnimationLancerPokeball.SetGenericBinding(trackAsset10, signalPokeball);
 
                 if (TimelineAnimationLancerPokeball.state == PlayState.Playing)
                 {
                     TimelineAnimationLancerPokeball.Stop();
                 }
 
+               // pokeball.GetComponent<LancerObjetScript>().lancerObjet();
+
                 TimelineAnimationLancerPokeball.Play();
                 TimelineCameraCombat.Play();
 
-                Destroy(pokeball, 15);
+                Destroy(pokeball, 15); 
+                
 
                 if (EnCombatContre == "PokemonRandom")
                 {
@@ -385,25 +291,48 @@ namespace ProjetP3DScene1
                 }
                 else if(EnCombatContre == "PokemonSauvage")
                 {
-                    int.TryParse(GameObject.Find("SceneBuilder").GetComponent<ProjetP3DScene1.main>().pokemonAdverseGameObject.name, out idPokedex);
-                    pokemon = pokemon.setChercherPokemonParNoId(idPokedex, jeu);
+                    // int.TryParse(GameObject.Find("SceneBuilder").GetComponent<ProjetP3DScene1.main>().pokemonAdverseGameObject.name, out idPokedex);
+                    pokemon = pokemonAdverseGameObject.GetComponent<StatistiquesPokemon>().GetPokemon();
+                   // pokemon = pokemon.setChercherPokemonParNoId(idPokedex, jeu);
                 }
 
-                pokemon.setPvRestant(pokemon.getPv());
+               // pokemon.setPvRestant(pokemon.getPv());
                 GameObject spawnPokemonGameObject = GameObject.Find("SpawnPokemon");
                 idPokedex = pokemon.getNoIdPokedex();
 
+                pokeball.GetComponent<AfterThrowingPokeball>().positionJoueur = positionJoueur;
                 pokeball.GetComponent<AfterThrowingPokeball>().NumeroPokedexPokemonAdverse = idPokedex;
 
-                rafraichirBarreViePokemonAdversaire2();
-                UIJoueur.SetActive(true);
-                UIAdversaire.SetActive(true);
-                BoiteDialogue.SetActive(true);
+                rafraichirBarreViePokemonJoueur2(positionJoueur);
+                rafraichirBarreViePokemonAdversaire2(positionJoueur);
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.SetActive(true);
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.SetActive(true);
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(3).gameObject.SetActive(true);
 
-                cameraCombat.SetActive(true);
-                GameObjectJoueurCamera.SetActive(false);
+                cameraCombatJoueurs[positionJoueur].SetActive(true); 
+                controllerJoueurs[positionJoueur].SetActive(false);
 
-                StartDialogueCombat();
+                canvasGameObject[positionJoueur].GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera; // Passage du rendu du canvas en camera
+                canvasGameObject[positionJoueur].GetComponent<Canvas>().worldCamera = cameraCombatJoueurs[positionJoueur].transform.GetChild(1).gameObject.GetComponent<Camera>();
+
+                if (JoueurManager.Joueurs.Count == 2)
+                {
+                    if (positionJoueur == 0)
+                    {
+                        cameraCombatJoueurs[positionJoueur].transform.GetChild(0).gameObject.GetComponent<Camera>().rect = new Rect(0, 0.5f, 1, 0.5f);
+                        cameraCombatJoueurs[positionJoueur].transform.GetChild(1).gameObject.GetComponent<Camera>().rect = new Rect(0, 0.5f, 1, 0.5f);
+                    }
+                    else if (positionJoueur == 1)
+                    {
+                        cameraCombatJoueurs[positionJoueur].transform.GetChild(0).gameObject.GetComponent<Camera>().rect = new Rect(0, 0, 1, 0.5f);
+                        cameraCombatJoueurs[positionJoueur].transform.GetChild(1).gameObject.GetComponent<Camera>().rect = new Rect(0, 0, 1, 0.5f);
+                    }
+
+                    canvasGameObject[positionJoueur].GetComponent<Canvas>().planeDistance = 0.32f;
+                    canvasGameObject[positionJoueur].GetComponent<CanvasScaler>().referenceResolution = new Vector2(3900, 1080);
+                }
+
+                StartDialogueCombat(positionJoueur);
             }
         /*
         if (Input.GetKeyDown(KeyCode.Space))
@@ -412,97 +341,139 @@ namespace ProjetP3DScene1
         } */
     }
 
-        public void changementPokemon_click(int positionPokemon)
+        public void changementPokemon_click()
         {
             //  textBox1.Text += pokemonJoueurSelectionner.getNom() + " a " + pokemonJoueurSelectionner.getPvRestant() + " PV" + Environment.NewLine;
 
             //  cb_choix_objets.Visible = false;
             //  btn_choix_objet.Visible = false;
-            if (pokemonJoueurSelectionner == Joueur.getPokemonEquipe()[positionPokemon]) // Si le pokémon est déjà sur le terrain, il ne peut pas rentrer
+
+            if (JoueurManager.Joueurs[0].enCombat == true)
             {
-                dialogueCombat.getDialogue().AddSentence("Le pokemon est déjà sur le terrain");
-                StartCoroutine(DialogueCombat());
+                if (JoueurManager.Joueurs[0].pokemonSelectionner == JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon]) // Si le pokémon est déjà sur le terrain, il ne peut pas rentrer
+                {
+                    dialogueCombat.getDialogue().AddSentence("Le pokemon est déjà sur le terrain");
+                    StartCoroutine(DialogueCombat());
+                }
+                else
+                {
+
+                    if (JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getPvRestant() <= 0) // Si le pokémon selectionné est K.O., il ne peut pas rentrer
+                    {
+                        dialogueCombat.getDialogue().AddSentence("Le pokémon est K.O.");
+                        StartCoroutine(DialogueCombat());
+                    }
+
+                    else if (JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getPvRestant() > 0) // Si le pokémon selectionné n'est pas K.O et qu'il n'est pas sur le terrain, il peut rentrer
+                    {
+                        JoueurManager.Joueurs[0].pokemonSelectionner = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon]; // Il prend la place du pokémon sur le terrain
+
+                        int idPokedexImage = JoueurManager.Joueurs[0].pokemonSelectionner.getNoIdPokedex();
+
+                        try
+                        {
+                            boutons_combat.transform.GetChild(0).gameObject.transform.GetChild(1).gameObject.GetComponent<Image>().preserveAspect = true;
+                            boutons_combat.transform.GetChild(0).gameObject.transform.GetChild(1).gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Icones/" + JoueurManager.Joueurs[0].pokemonSelectionner.getNoIdPokedex());
+                        }
+                        catch
+                        {
+
+                        }
+
+                        /*
+                        try
+                        {
+
+                            Bitmap png = new Bitmap(AppDomain.CurrentDomain.BaseDirectory + "\\Images\\" + idPokedexImage + ".png");
+                            pictureBoxPokemonCombatJoueur.Image = png;
+                            pictureBoxPokemonCombatJoueur.Image.RotateFlip(RotateFlipType.Rotate180FlipY);
+
+                        }
+                        catch
+                        {
+                            MessageBox.Show("L'image du pokémon n'a pas pu être chargée. Veuillez vérifier que celle-ci est bien présente dans le répertoire.", "Vérification de l'image du pokémon", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+
+                        pictureBoxBasePokemonJoueur.Controls.Add(pictureBoxPokemonCombatJoueur);
+                        pictureBoxPokemonCombatJoueur.Location = new Point(26, 8);
+
+                        label_nom_pokemon_combat_joueur.Text = pokemonJoueurSelectionner.getNom();
+
+                        try
+                        {
+                            Bitmap pngIconePokemonMenuCombat = new Bitmap(AppDomain.CurrentDomain.BaseDirectory + "\\Images\\Icones\\" + pokemonJoueurSelectionner.getNoIdPokedex() + ".png");
+                            pictureBoxIconePokemon.Image = pngIconePokemonMenuCombat;
+                        }
+                        catch
+                        {
+                            MessageBox.Show("L'icône du pokémon n'a pas pu être chargée. Veuillez vérifier que celle-ci est bien présente dans le répertoire.", "Vérification de l'icône du pokémon", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+
+                        if (pokemonJoueurSelectionner.getSexe() == "Feminin")
+                        {
+                            label_sexe_pokemon_combat_joueur.Text = "♀";
+                            label_sexe_pokemon_combat_joueur.ForeColor = Color.Pink;
+                        }
+                        else if (pokemonJoueurSelectionner.getSexe() == "Masculin")
+                        {
+                            label_sexe_pokemon_combat_joueur.Text = "♂";
+                            label_sexe_pokemon_combat_joueur.ForeColor = Color.Blue;
+                        }
+
+                        panel_choix_pokemon_selection.Visible = false;
+                        btn_attaque1.Enabled = true;
+                        btn_attraper.Enabled = true;
+                        btn_soigner.Enabled = true;
+                        btn_changement_pokemon.Enabled = true;
+                        */
+                        compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
+
+                        changement_pokemon = true;
+                        nombreTourStatut = 0;
+                        nombreTourSommeil = 0;
+                        nombreTourStatutAEffectuer = 0;
+
+                        rafraichirBarreViePokemonJoueur2(0); // Rafraichissement de l'interface de combat côté pokémon joueur avec les nouvelles données du pokémon entré
+
+                        // rafraichirBarreViePokemonJoueur1();
+
+                        // label_niveau_pokemon_combat_joueur.Text = "N. " + pokemonJoueurSelectionner.getNiveau().ToString();
+                        rafraichirBarreExperiencePokemonJoueur(); // Rafraichissement de la barre d'expérience dans l'interface de combat avec l'expérience du pokémon entré
+
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " est entré sur le terrain ");
+                        StartCoroutine(DialogueCombat());
+
+                        ClassLibrary.Attaque attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, JoueurManager.Joueurs[0].pokemonSelectionner); // On sélectionne l'attaque que va faire le pokémon adverse vu que c'est son tour d'attaquer
+                        attaqueCombatAdversaire(attaqueLancerAdversaire); // Et on applique l'attaque de l'adversaire
+                    }
+                }
             }
             else
             {
+                btn_retour_menu_pokemon_apres_menu_pokemon_options_click();
+                btn_retour_apres_menu_pokemon_click(0);
+                menuStart.GetComponent<MenuStartScript>().btn_retour_apres_menu_start_click();
 
-                if (Joueur.getPokemonEquipe()[positionPokemon].getPvRestant() <= 0) // Si le pokémon selectionné est K.O., il ne peut pas rentrer
-                {
-                    dialogueCombat.getDialogue().AddSentence("Le pokémon est K.O."); 
-                    StartCoroutine(DialogueCombat());
-                }
+                Vector3 destinationPositionPokeball = new Vector3(destinationPokeball.transform.position.x, destinationPokeball.transform.position.y, destinationPokeball.transform.position.z - 0.5f);
+                GameObject pokeball = (GameObject)Instantiate(Resources.Load("Models/Pokeballs/Pokeball"), destinationPositionPokeball, destinationPokeball.rotation, GameObjectJoueur.transform);
+                Animator animatorPokeball = pokeball.GetComponent<Animator>();
+                SignalReceiver signalPokeball = pokeball.GetComponent<SignalReceiver>();
 
-                else if (Joueur.getPokemonEquipe()[positionPokemon].getPvRestant() > 0) // Si le pokémon selectionné n'est pas K.O et qu'il n'est pas sur le terrain, il peut rentrer
-                {
-                    pokemonJoueurSelectionner = Joueur.getPokemonEquipe()[positionPokemon]; // Il prend la place du pokémon sur le terrain
+                int idPokedex = JoueurManager.Joueurs[0].pokemonSelectionner.getNoIdPokedex();
+                pokeball.GetComponent<AfterThrowingPokeball>().NumeroPokedexPokemon = idPokedex;
 
-                    int idPokedexImage = pokemonJoueurSelectionner.getNoIdPokedex();
-                    /*
-                    try
-                    {
+                animator.Play("Throw pokeball");
 
-                        Bitmap png = new Bitmap(AppDomain.CurrentDomain.BaseDirectory + "\\Images\\" + idPokedexImage + ".png");
-                        pictureBoxPokemonCombatJoueur.Image = png;
-                        pictureBoxPokemonCombatJoueur.Image.RotateFlip(RotateFlipType.Rotate180FlipY);
+                TimelineAsset timelineAsset = (TimelineAsset)TimelinePokemonAccompagner.playableAsset;
+                TrackAsset trackAsset = timelineAsset.GetOutputTrack(2);
+                TrackAsset trackAsset2 = timelineAsset.GetOutputTrack(3);
 
-                    }
-                    catch
-                    {
-                        MessageBox.Show("L'image du pokémon n'a pas pu être chargée. Veuillez vérifier que celle-ci est bien présente dans le répertoire.", "Vérification de l'image du pokémon", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                TimelinePokemonAccompagner.SetGenericBinding(trackAsset, animatorPokeball);
+                TimelinePokemonAccompagner.SetGenericBinding(trackAsset2, signalPokeball);
 
-                    pictureBoxBasePokemonJoueur.Controls.Add(pictureBoxPokemonCombatJoueur);
-                    pictureBoxPokemonCombatJoueur.Location = new Point(26, 8);
+                TimelinePokemonAccompagner.Play();
 
-                    label_nom_pokemon_combat_joueur.Text = pokemonJoueurSelectionner.getNom();
-
-                    try
-                    {
-                        Bitmap pngIconePokemonMenuCombat = new Bitmap(AppDomain.CurrentDomain.BaseDirectory + "\\Images\\Icones\\" + pokemonJoueurSelectionner.getNoIdPokedex() + ".png");
-                        pictureBoxIconePokemon.Image = pngIconePokemonMenuCombat;
-                    }
-                    catch
-                    {
-                        MessageBox.Show("L'icône du pokémon n'a pas pu être chargée. Veuillez vérifier que celle-ci est bien présente dans le répertoire.", "Vérification de l'icône du pokémon", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-
-                    if (pokemonJoueurSelectionner.getSexe() == "Feminin")
-                    {
-                        label_sexe_pokemon_combat_joueur.Text = "♀";
-                        label_sexe_pokemon_combat_joueur.ForeColor = Color.Pink;
-                    }
-                    else if (pokemonJoueurSelectionner.getSexe() == "Masculin")
-                    {
-                        label_sexe_pokemon_combat_joueur.Text = "♂";
-                        label_sexe_pokemon_combat_joueur.ForeColor = Color.Blue;
-                    }
-
-                    panel_choix_pokemon_selection.Visible = false;
-                    btn_attaque1.Enabled = true;
-                    btn_attraper.Enabled = true;
-                    btn_soigner.Enabled = true;
-                    btn_changement_pokemon.Enabled = true;
-                    */
-                    compteur = pokemonJoueurSelectionner.getPvRestant();
-
-                    changement_pokemon = true;
-                    nombreTourStatut = 0;
-                    nombreTourSommeil = 0;
-                    nombreTourStatutAEffectuer = 0;
-
-                    rafraichirBarreViePokemonJoueur2(); // Rafraichissement de l'interface de combat côté pokémon joueur avec les nouvelles données du pokémon entré
-
-                    // rafraichirBarreViePokemonJoueur1();
-
-                    // label_niveau_pokemon_combat_joueur.Text = "N. " + pokemonJoueurSelectionner.getNiveau().ToString();
-                    rafraichirBarreExperiencePokemonJoueur(); // Rafraichissement de la barre d'expérience dans l'interface de combat avec l'expérience du pokémon entré
-
-                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " est entré sur le terrain ");
-                    StartCoroutine(DialogueCombat());
-
-                    ClassLibrary.Attaque attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, pokemonJoueurSelectionner); // On sélectionne l'attaque que va faire le pokémon adverse vu que c'est son tour d'attaquer
-                    attaqueCombatAdversaire(attaqueLancerAdversaire); // Et on applique l'attaque de l'adversaire
-                }
+                Destroy(pokeball, 15);
             }
         }
 
@@ -512,9 +483,9 @@ namespace ProjetP3DScene1
             {
                 if (gagnePvPokemonJoueur != true)
                 {
-                    for (int i = 0; i <= Joueur.getPokemonEquipe().Count - 1; i++)
+                    for (int i = 0; i <= JoueurManager.Joueurs[0].getPokemonEquipe().Count - 1; i++)
                     {
-                        if (pokemonJoueurSelectionner == Joueur.getPokemonEquipe()[i])
+                        if (JoueurManager.Joueurs[0].pokemonSelectionner == JoueurManager.Joueurs[0].getPokemonEquipe()[i])
                         {
                             if (pokemon.getPvRestant() > 0)
                             {
@@ -529,14 +500,14 @@ namespace ProjetP3DScene1
                                         nombreTourSommeilAdversaire = 0;
                                         nombreTourStatutAEffectuerAdversaire = 0;
                                     }
-                                    attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, pokemonJoueurSelectionner);
+                                    attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, JoueurManager.Joueurs[0].pokemonSelectionner);
 
                                     if (attaqueLancerAdversaire != null)
                                     {
                                         changementStatutPokemon = pokemon.getAttaqueChangementStatutPokemonAdverseReussi(attaqueLancerAdversaire);
-                                        reussiteAttaque = pokemon.getReussiteAttaque(pokemonJoueurSelectionner.getProbabiliteReussiteAttaque(pokemon, pokemonJoueurSelectionner, attaqueLancerAdversaire));
-                                        bonusCritique = pokemonJoueurSelectionner.getCoupCritique(pokemon.getProbabiliteCoupCritique(pokemon));
-                                        nbDegats = pokemon.attaqueWithNomAttaque(pokemon, pokemonJoueurSelectionner, attaqueLancerAdversaire, bonusCritique, changementStatutPokemon, ref nombreTourStatut, ref reussiteAttaqueParalyseAdversaire, ref reussiteAttaqueGelAdversaire, ref nombreTourSommeilAdversaire);
+                                        reussiteAttaque = pokemon.getReussiteAttaque(JoueurManager.Joueurs[0].pokemonSelectionner.getProbabiliteReussiteAttaque(pokemon, JoueurManager.Joueurs[0].pokemonSelectionner, attaqueLancerAdversaire));
+                                        bonusCritique = JoueurManager.Joueurs[0].pokemonSelectionner.getCoupCritique(pokemon.getProbabiliteCoupCritique(pokemon));
+                                        nbDegats = pokemon.attaqueWithNomAttaque(pokemon, JoueurManager.Joueurs[0].pokemonSelectionner, attaqueLancerAdversaire, bonusCritique, changementStatutPokemon, ref nombreTourStatut, ref reussiteAttaqueParalyseAdversaire, ref reussiteAttaqueGelAdversaire, ref nombreTourSommeilAdversaire);
 
                                         if (pokemon.getStatutPokemon() != "Sommeil")
                                         {
@@ -557,9 +528,9 @@ namespace ProjetP3DScene1
                                                             bonusCritique = 1;
                                                         }
 
-                                                        if (pokemon.getEfficaciteAttaque(attaqueLancerAdversaire, pokemonJoueurSelectionner) != 1)
+                                                        if (pokemon.getEfficaciteAttaque(attaqueLancerAdversaire, JoueurManager.Joueurs[0].pokemonSelectionner) != 1)
                                                         {
-                                                            dialogueCombat.getDialogue().AddSentence(pokemon.getEfficaciteAttaqueTexte(pokemon.getEfficaciteAttaque(attaqueLancerAdversaire, pokemonJoueurSelectionner)));
+                                                            dialogueCombat.getDialogue().AddSentence(pokemon.getEfficaciteAttaqueTexte(pokemon.getEfficaciteAttaque(attaqueLancerAdversaire, JoueurManager.Joueurs[0].pokemonSelectionner)));
                                                          //   StartCoroutine(DialogueCombat());
                                                         }
 
@@ -575,7 +546,7 @@ namespace ProjetP3DScene1
 
                                                         if (changementStatutPokemon == true)
                                                         {
-                                                            string statutPokemon = pokemonJoueurSelectionner.getStatutPokemon();
+                                                            string statutPokemon = JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon();
                                                             if (statutPokemon != "Normal")
                                                             {
                                                                 try
@@ -593,7 +564,7 @@ namespace ProjetP3DScene1
                                                         }
 
                                                         dialogueCombat.getDialogue().AddSentence(pokemon.getNom() + " adverse a fait " + nbDegats + " dégâts ");
-                                                        dialogueCombat.getDialogue().AddSentence(pokemon.getEfficaciteAttaqueTexte(pokemon.getEfficaciteAttaque(attaqueLancerAdversaire, pokemonJoueurSelectionner)));
+                                                        dialogueCombat.getDialogue().AddSentence(pokemon.getEfficaciteAttaqueTexte(pokemon.getEfficaciteAttaque(attaqueLancerAdversaire, JoueurManager.Joueurs[0].pokemonSelectionner)));
                                                       //  StartCoroutine(DialogueCombat());
                                                     }
                                                     else
@@ -658,39 +629,40 @@ namespace ProjetP3DScene1
                 btn_changement_pokemon.Enabled = false; */
             }
 
-            StartCoroutine("timerBarreJoueurStart");
+            //  StartCoroutine("timerBarreJoueurStart");
+           // tourCombatPokemon();
         }
 
         public void rafraichirBarreViePokemonAdversaire()
         {
             if (statutPokemonPerdPvAdversaire == 0)
             {
-                if (pokemonJoueurSelectionner.getPvRestant() > 0)
+                if (JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0)
                 {
-                    if (nombreTourSommeil > nombreTourStatutAEffectuer && pokemonJoueurSelectionner.getStatutPokemon() == "Sommeil")
+                    if (nombreTourSommeil > nombreTourStatutAEffectuer && JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Sommeil")
                     {
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " se réveille");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " se réveille");
                         StartCoroutine(DialogueCombat());
-                        pokemonJoueurSelectionner.setStatutPokemon("Normal");
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setStatutPokemon("Normal");
                         nombreTourSommeil = 0;
                         nombreTourStatutAEffectuer = 0;
                     }
 
-                    bool changementStatutAdversaire = pokemonJoueurSelectionner.getAttaqueChangementStatutPokemonAdverseReussi(attaqueLancerPokemon);
-                    bool reussiteAttaque = pokemonJoueurSelectionner.getReussiteAttaque(pokemonJoueurSelectionner.getProbabiliteReussiteAttaque(pokemonJoueurSelectionner, pokemon, attaqueLancerPokemon));
-                    double bonusCritique = pokemonJoueurSelectionner.getCoupCritique(pokemonJoueurSelectionner.getProbabiliteCoupCritique(pokemonJoueurSelectionner));
-                    int nbDegats = pokemonJoueurSelectionner.attaqueWithNomAttaque(pokemonJoueurSelectionner, pokemon, attaqueLancerPokemon, bonusCritique, changementStatutAdversaire, ref nombreTourStatutAdversaire, ref reussiteAttaqueParalyse, ref reussiteAttaqueGel, ref nombreTourSommeil);
+                    bool changementStatutAdversaire = JoueurManager.Joueurs[0].pokemonSelectionner.getAttaqueChangementStatutPokemonAdverseReussi(attaqueLancerPokemon);
+                    bool reussiteAttaque = JoueurManager.Joueurs[0].pokemonSelectionner.getReussiteAttaque(JoueurManager.Joueurs[0].pokemonSelectionner.getProbabiliteReussiteAttaque(JoueurManager.Joueurs[0].pokemonSelectionner, pokemon, attaqueLancerPokemon));
+                    double bonusCritique = JoueurManager.Joueurs[0].pokemonSelectionner.getCoupCritique(JoueurManager.Joueurs[0].pokemonSelectionner.getProbabiliteCoupCritique(JoueurManager.Joueurs[0].pokemonSelectionner));
+                    nbDegatsContreAdversaire = JoueurManager.Joueurs[0].pokemonSelectionner.attaqueWithNomAttaque(JoueurManager.Joueurs[0].pokemonSelectionner, pokemon, attaqueLancerPokemon, bonusCritique, changementStatutAdversaire, ref nombreTourStatutAdversaire, ref reussiteAttaqueParalyse, ref reussiteAttaqueGel, ref nombreTourSommeil);
 
-                    if (pokemonJoueurSelectionner.getStatutPokemon() != "Sommeil")
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() != "Sommeil")
                     {
                         if (reussiteAttaque == true)
                         {
-                            dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " lance " + attaqueLancerPokemon.getNom());
+                            dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " lance " + attaqueLancerPokemon.getNom());
                           //  StartCoroutine(DialogueCombat());
 
-                            if (pokemonJoueurSelectionner.getStatutPokemon() != "Paralysie" || (pokemonJoueurSelectionner.getStatutPokemon() == "Paralysie" && reussiteAttaqueParalyse == true))
+                            if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() != "Paralysie" || (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Paralysie" && reussiteAttaqueParalyse == true))
                             {
-                                if (pokemonJoueurSelectionner.getStatutPokemon() != "Gelé" || (pokemonJoueurSelectionner.getStatutPokemon() == "Gelé" && reussiteAttaqueGel == true))
+                                if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() != "Gelé" || (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Gelé" && reussiteAttaqueGel == true))
                                 {
 
                                     if (bonusCritique == 1.5)
@@ -700,17 +672,17 @@ namespace ProjetP3DScene1
                                         bonusCritique = 1;
                                     }
 
-                                    if (pokemonJoueurSelectionner.getEfficaciteAttaque(attaqueLancerPokemon, pokemon) != 1)
+                                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getEfficaciteAttaque(attaqueLancerPokemon, pokemon) != 1)
                                     {
-                                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getEfficaciteAttaqueTexte(pokemonJoueurSelectionner.getEfficaciteAttaque(attaqueLancerPokemon, pokemon)));
+                                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getEfficaciteAttaqueTexte(JoueurManager.Joueurs[0].pokemonSelectionner.getEfficaciteAttaque(attaqueLancerPokemon, pokemon)));
                                        // StartCoroutine(DialogueCombat());
                                     }
 
                                     if (reussiteAttaqueGel == true)
                                     {
-                                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " redevient normal");
-                                      //  StartCoroutine(DialogueCombat());
-                                        pokemonJoueurSelectionner.setStatutPokemon("Normal");
+                                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " redevient normal");
+                                        //  StartCoroutine(DialogueCombat());
+                                        JoueurManager.Joueurs[0].pokemonSelectionner.setStatutPokemon("Normal");
                                        // pictureBoxStatutPokemonCombatJoueur.Image = null;
 
                                     }
@@ -737,19 +709,19 @@ namespace ProjetP3DScene1
                                 }
                                 else
                                 {
-                                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " est gelé. Il ne peut pas attaquer");
+                                    dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " est gelé. Il ne peut pas attaquer");
                                   //  StartCoroutine(DialogueCombat());
                                 }
                             }
                             else
                             {
-                                dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " est paralysé. Il ne peut pas attaquer");
+                                dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " est paralysé. Il ne peut pas attaquer");
                              //   StartCoroutine(DialogueCombat());
                             }
                         }
                         else
                         {
-                            dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " rate son attaque");
+                            dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " rate son attaque");
                          //   StartCoroutine(DialogueCombat());
                         }
 
@@ -758,10 +730,10 @@ namespace ProjetP3DScene1
                     {
                         if (nombreTourStatutAEffectuer == 0)
                         {
-                            nombreTourStatutAEffectuer = pokemonJoueurSelectionner.getNombreTourSommeilAEffectuer();
+                            nombreTourStatutAEffectuer = JoueurManager.Joueurs[0].pokemonSelectionner.getNombreTourSommeilAEffectuer();
                         }
 
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " est endormi. Il ne peut pas attaquer");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " est endormi. Il ne peut pas attaquer");
                        // StartCoroutine(DialogueCombat());
                         nombreTourSommeil++;
                     }
@@ -782,7 +754,92 @@ namespace ProjetP3DScene1
                 btn_changement_pokemon.Enabled = false; */
             }
             // timerBarrePokemonAdversaire.Start();
-            StartCoroutine("timerBarreAdversaireStart");
+            // StartCoroutine("timerBarreAdversaireStart");
+         //   tourCombatPokemon();
+        }
+
+        /// <summary>
+        /// Cette méthode permet de voir quel pokémon va attaquer en premier selon les différents paramètres
+        /// </summary>
+        public void attaqueCombatReecriture(ClassLibrary.Attaque attaqueLancerPokemonJoueur)
+        {
+            boutons_attaque.SetActive(false);
+
+            ClassLibrary.Attaque attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, JoueurManager.Joueurs[0].pokemonSelectionner);
+
+            if (attaqueLancerPokemonJoueur.getPrioriteAttaque() > attaqueLancerAdversaire.getPrioriteAttaque())
+            {
+                pokemonJoueurAttaquePremier = true;
+                attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
+                if (attaqueLancerAdversaire != null)
+                {
+                  //  attaqueCombatAdversaire(attaqueLancerAdversaire);
+                    StartCoroutine("tourCombatPokemonStartTourContrePokemonAdversaireEnPremier");
+                }
+            }
+            else if (attaqueLancerPokemonJoueur.getPrioriteAttaque() < attaqueLancerAdversaire.getPrioriteAttaque())
+            {
+                pokemonJoueurAttaquePremier = false;
+                if (attaqueLancerAdversaire != null)
+                {
+                  //  attaqueCombatAdversaire(attaqueLancerAdversaire);
+                    StartCoroutine("tourCombatPokemonStartTourContrePokemonJoueurEnPremier");
+                }
+                attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
+            }
+            else
+            {
+                if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse() > pokemon.getStatistiquesVitesse())
+                {
+                    pokemonJoueurAttaquePremier = true;
+                    attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
+                    if (attaqueLancerAdversaire != null)
+                    {
+                      //  attaqueCombatAdversaire(attaqueLancerAdversaire);
+                        StartCoroutine("tourCombatPokemonStartTourContrePokemonAdversaireEnPremier");
+                    }
+                }
+                else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse() < pokemon.getStatistiquesVitesse())
+                {
+                    pokemonJoueurAttaquePremier = false;
+                    if (attaqueLancerAdversaire != null)
+                    {
+                       // attaqueCombatAdversaire(attaqueLancerAdversaire);
+                        StartCoroutine("tourCombatPokemonStartTourContrePokemonJoueurEnPremier");
+                    }
+                    attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
+                }
+                else
+                {
+                    List<ClassLibrary.Attaque> liste_attaque_vitesse = new List<ClassLibrary.Attaque>();
+
+                    liste_attaque_vitesse.Add(attaqueLancerPokemonJoueur);
+                    liste_attaque_vitesse.Add(attaqueLancerAdversaire);
+
+                    int index = Random.Range(1, liste_attaque_vitesse.Count);
+
+                    if (liste_attaque_vitesse[index] == attaqueLancerPokemonJoueur)
+                    {
+                        pokemonJoueurAttaquePremier = true;
+                        attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
+                        if (attaqueLancerAdversaire != null)
+                        {
+                          //  attaqueCombatAdversaire(attaqueLancerAdversaire);
+                            StartCoroutine("tourCombatPokemonStartTourContrePokemonAdversaireEnPremier");
+                        }
+                    }
+                    else if (liste_attaque_vitesse[index] == attaqueLancerAdversaire)
+                    {
+                        pokemonJoueurAttaquePremier = false;
+                        if (attaqueLancerAdversaire != null)
+                        {
+                           // attaqueCombatAdversaire(attaqueLancerAdversaire);
+                            StartCoroutine("tourCombatPokemonStartTourContrePokemonJoueurEnPremier");
+                        }
+                        attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -792,7 +849,7 @@ namespace ProjetP3DScene1
         {
             boutons_attaque.SetActive(false);
 
-            ClassLibrary.Attaque attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, pokemonJoueurSelectionner);
+            ClassLibrary.Attaque attaqueLancerAdversaire = pokemon.attaqueAdversaire(pokemon, JoueurManager.Joueurs[0].pokemonSelectionner);
 
             if (attaqueLancerPokemonJoueur.getPrioriteAttaque() > attaqueLancerAdversaire.getPrioriteAttaque())
             {
@@ -814,7 +871,7 @@ namespace ProjetP3DScene1
             }
             else
             {
-                if (pokemonJoueurSelectionner.getStatistiquesVitesse() > pokemon.getStatistiquesVitesse())
+                if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse() > pokemon.getStatistiquesVitesse())
                 {
                     pokemonJoueurAttaquePremier = true;
                     attaqueCombatPokemonJoueur(attaqueLancerPokemonJoueur);
@@ -823,7 +880,7 @@ namespace ProjetP3DScene1
                         attaqueCombatAdversaire(attaqueLancerAdversaire);
                     }
                 }
-                else if (pokemonJoueurSelectionner.getStatistiquesVitesse() < pokemon.getStatistiquesVitesse())
+                else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse() < pokemon.getStatistiquesVitesse())
                 {
                     pokemonJoueurAttaquePremier = false;
                     if (attaqueLancerAdversaire != null)
@@ -863,9 +920,23 @@ namespace ProjetP3DScene1
             }
         }
 
+        public void activerMenuCombatApresTour()
+        {
+            boutons_combat.SetActive(true);
+            boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
+        }
+
+        public void desactiverMenuCombat()
+        {
+            UIJoueur.SetActive(false);
+            UIAdversaire.SetActive(false);
+            boutons_combat.SetActive(false);
+            BoiteDialogue.SetActive(false);
+        }
+
         public void attaqueCombatPokemonJoueur(ClassLibrary.Attaque attaqueLancer)
         {
-            if (pokemonJoueurSelectionner.getPvRestant() > 0)
+            if (JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0)
             {
                 attaqueLancerPokemon = attaqueLancer;
             }
@@ -873,12 +944,12 @@ namespace ProjetP3DScene1
 
         public void attaqueCombatAdversaire(ClassLibrary.Attaque attaqueLancer)
         {
-            if (pokemonJoueurSelectionner == Joueur.getPokemonEquipe()[0])
+            if (JoueurManager.Joueurs[0].pokemonSelectionner == JoueurManager.Joueurs[0].getPokemonEquipe()[0])
             {
 
             }
 
-            compteur = pokemonJoueurSelectionner.getPvRestant();
+            compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
 
             /*
             btn_attaque_une.Visible = false;
@@ -948,20 +1019,20 @@ namespace ProjetP3DScene1
         /// <summary>
         /// Cette méthode permet de rafraîchir les pokémon et leurs statistiques présents dans le menu
         /// </summary>
-        public void rafraichirEquipe()
+        public void rafraichirEquipe(int positionJoueur, GameObject canvasGameObject)
         {
-            for (int i = 0; i < Joueur.getPokemonEquipe().Count; i++)
+            for (int i = 0; i < JoueurManager.Joueurs[positionJoueur].getPokemonEquipe().Count; i++)
             {
-                pokemonMenu[i].SetActive(true); // Activation de la partie qu'occuppe les pokémon présents dans l'équipe
+                canvasGameObject.transform.GetChild(4).gameObject.transform.GetChild(1).gameObject.transform.GetChild(i).gameObject.SetActive(true); // Activation de la partie qu'occuppe les pokémon présents dans l'équipe
 
-                int idPokedexImage = Joueur.getPokemonEquipe()[i].getNoIdPokedex();
+                int idPokedexImage = JoueurManager.Joueurs[positionJoueur].getPokemonEquipe()[i].getNoIdPokedex();
 
                 try
                 {
                     // Chargement des sprites des pokémon
-                    imagePokemonMenuImage[i].color = new Color32(255, 255, 255, 255);
+                    canvasGameObject.transform.GetChild(4).gameObject.transform.GetChild(1).gameObject.transform.GetChild(i).gameObject.transform.GetChild(0).gameObject.GetComponent<Image>().color = new Color32(255, 255, 255, 255);
                     Sprite imagePokemon = Resources.Load<Sprite>("Images/" + idPokedexImage);
-                    imagePokemonMenuImage[i].sprite = imagePokemon;
+                    canvasGameObject.transform.GetChild(4).gameObject.transform.GetChild(1).gameObject.transform.GetChild(i).gameObject.transform.GetChild(0).gameObject.GetComponent<Image>().sprite = imagePokemon;
                 }
                 catch
                 {
@@ -969,49 +1040,41 @@ namespace ProjetP3DScene1
                 }
 
                 // Chargement des noms et du nombre du pv des pokémon
-                textNomPokemonMenu[i].GetComponent<Text>().text = Joueur.getPokemonEquipe()[i].getNom();
-                pvPokemonMenuTexte[i].text = Joueur.getPokemonEquipe()[i].getPvRestant() + " / " + Joueur.getPokemonEquipe()[i].getPv() + " PV";
-
-                // Si le joueur est en combat, on permet le changement de pokémon
-                if (EnCombat == true && boutonChoisirPokemonMenu[i].activeSelf == false)
-                {
-                    boutonChoisirPokemonMenu[i].SetActive(true);
-                }
-                else if(EnCombat == false && boutonChoisirPokemonMenu[i].activeSelf == true)
-                {
-                    boutonChoisirPokemonMenu[i].SetActive(false);
-                }             
+                canvasGameObject.transform.GetChild(4).gameObject.transform.GetChild(1).gameObject.transform.GetChild(i).gameObject.transform.GetChild(1).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[positionJoueur].getPokemonEquipe()[i].getNom();
+                canvasGameObject.transform.GetChild(4).gameObject.transform.GetChild(1).gameObject.transform.GetChild(i).gameObject.transform.GetChild(2).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[positionJoueur].getPokemonEquipe()[i].getPvRestant() + " / " + JoueurManager.Joueurs[positionJoueur].getPokemonEquipe()[i].getPv() + " PV";           
             }
-        }
 
+            JoueurManager.Joueurs[positionJoueur].pokemonSelectionner = JoueurManager.Joueurs[positionJoueur].getPokemonEquipe()[0];
+        }
+        /*
         public void OpeningMenuPokemon()
         {
             jeu.getUIPopUpMenu();
         }
-
+        */
         /// <summary>
         /// Cette méthode s'active quand le joueur clique sur le bouton d'attaque, elle permet de passer au menu des différentes attaques du pokémon et va voir si il possède bien ses attaques
         /// </summary>
-        public void btn_attaque_click()
+        public void btn_attaque_click(int positionJoueur)
         {
-            if (pokemonJoueurSelectionner.getListeAttaque().Count > 0)
+            if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getListeAttaque().Count > 0)
             {
-                if (pokemonJoueurSelectionner.getAttaque1().getNom() != "default")
+                if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque1().getNom() != "default")
                 {
                     // Chargement de l'interface de l'attaque et de ses propriétés
-                    Text texteBoutonAttaque1 = boutons_attaque.transform.GetChild(0).gameObject.transform.GetChild(0).GetComponent<Text>();
-                    texteBoutonAttaque1.text = pokemonJoueurSelectionner.getAttaque1().getNom();
-                    Text textePPAttaque1 = boutons_attaque.transform.GetChild(0).gameObject.transform.GetChild(1).GetComponent<Text>();
-                    textePPAttaque1.text = "PP " + pokemonJoueurSelectionner.getAttaque1().getPPRestant() + "/" + pokemonJoueurSelectionner.getAttaque1().getPP();
+                    Text texteBoutonAttaque1 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(0).gameObject.transform.GetChild(0).GetComponent<Text>();
+                    texteBoutonAttaque1.text = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque1().getNom();
+                    Text textePPAttaque1 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(0).gameObject.transform.GetChild(1).GetComponent<Text>();
+                    textePPAttaque1.text = "PP " + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque1().getPPRestant() + "/" + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque1().getPP();
 
-                    string typeAttaque1 = pokemonJoueurSelectionner.getAttaque1().getTypeAttaque();
+                    string typeAttaque1 = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque1().getTypeAttaque();
                     if (typeAttaque1 != null)
                     {
 
                         try
                         {
                             Sprite pngAttaque1 = Resources.Load<Sprite>("Images/Combat/bouton_type_" + typeAttaque1);
-                            boutons_attaque.transform.GetChild(0).gameObject.GetComponent<Image>().sprite = pngAttaque1;
+                            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(0).gameObject.GetComponent<Image>().sprite = pngAttaque1;
                         }
                         catch
                         {
@@ -1021,7 +1084,7 @@ namespace ProjetP3DScene1
                         try
                         {
                             Sprite pngTypeAttaque1 = Resources.Load<Sprite>("Images/Types/" + typeAttaque1);
-                            boutons_attaque.transform.GetChild(0).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque1;
+                            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(0).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque1;
                         }
                         catch
                         {
@@ -1030,23 +1093,23 @@ namespace ProjetP3DScene1
                     }
                 }
 
-                if (pokemonJoueurSelectionner.getListeAttaque().Count > 1)
+                if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getListeAttaque().Count > 1)
                 {
-                    if (pokemonJoueurSelectionner.getAttaque2().getNom() != "default")
+                    if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque2().getNom() != "default")
                     {
                         // Chargement de l'interface de l'attaque et de ses propriétés
-                        Text texteBoutonAttaque2 = boutons_attaque.transform.GetChild(1).gameObject.transform.GetChild(0).GetComponent<Text>();
-                        texteBoutonAttaque2.text = pokemonJoueurSelectionner.getAttaque2().getNom();
-                        Text textePPAttaque2 = boutons_attaque.transform.GetChild(1).gameObject.transform.GetChild(1).GetComponent<Text>();
-                        textePPAttaque2.text = "PP " + pokemonJoueurSelectionner.getAttaque2().getPPRestant() + "/" + pokemonJoueurSelectionner.getAttaque2().getPP();
+                        Text texteBoutonAttaque2 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(1).gameObject.transform.GetChild(0).GetComponent<Text>();
+                        texteBoutonAttaque2.text = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque2().getNom();
+                        Text textePPAttaque2 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(1).gameObject.transform.GetChild(1).GetComponent<Text>();
+                        textePPAttaque2.text = "PP " + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque2().getPPRestant() + "/" + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque2().getPP();
 
-                        string typeAttaque2 = pokemonJoueurSelectionner.getAttaque2().getTypeAttaque();
+                        string typeAttaque2 = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque2().getTypeAttaque();
                         if (typeAttaque2 != null)
                         {
                             try
                             {
                                 Sprite pngAttaque2 = Resources.Load<Sprite>("Images/Combat/bouton_type_" + typeAttaque2);
-                                boutons_attaque.transform.GetChild(1).gameObject.GetComponent<Image>().sprite = pngAttaque2;
+                                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(1).gameObject.GetComponent<Image>().sprite = pngAttaque2;
                             }
                             catch
                             {
@@ -1056,7 +1119,7 @@ namespace ProjetP3DScene1
                             try
                             {
                                 Sprite pngTypeAttaque2 = Resources.Load<Sprite>("Images/Types/" + typeAttaque2);
-                                boutons_attaque.transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque2;
+                                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque2;
                             }
                             catch
                             {
@@ -1065,23 +1128,23 @@ namespace ProjetP3DScene1
                         }
                     }
 
-                    if (pokemonJoueurSelectionner.getListeAttaque().Count > 2)
+                    if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getListeAttaque().Count > 2)
                     {
-                        if (pokemonJoueurSelectionner.getAttaque3().getNom() != "default")
+                        if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque3().getNom() != "default")
                         {
                             // Chargement de l'interface de l'attaque et de ses propriétés
-                            Text texteBoutonAttaque3 = boutons_attaque.transform.GetChild(2).gameObject.transform.GetChild(0).GetComponent<Text>();
-                            texteBoutonAttaque3.text = pokemonJoueurSelectionner.getAttaque3().getNom();
-                            Text textePPAttaque3 = boutons_attaque.transform.GetChild(2).gameObject.transform.GetChild(1).GetComponent<Text>();
-                            textePPAttaque3.text = "PP " + pokemonJoueurSelectionner.getAttaque3().getPPRestant() + "/" + pokemonJoueurSelectionner.getAttaque3().getPP();
+                            Text texteBoutonAttaque3 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(2).gameObject.transform.GetChild(0).GetComponent<Text>();
+                            texteBoutonAttaque3.text = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque3().getNom();
+                            Text textePPAttaque3 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(2).gameObject.transform.GetChild(1).GetComponent<Text>();
+                            textePPAttaque3.text = "PP " + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque3().getPPRestant() + "/" + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque3().getPP();
 
-                            string typeAttaque3 = pokemonJoueurSelectionner.getAttaque3().getTypeAttaque();
+                            string typeAttaque3 = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque3().getTypeAttaque();
                             if (typeAttaque3 != null)
                             {
                                 try
                                 {
                                     Sprite pngAttaque3 = Resources.Load<Sprite>("Images/Combat/bouton_type_" + typeAttaque3);
-                                    boutons_attaque.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngAttaque3;
+                                    canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngAttaque3;
                                 }
                                 catch
                                 {
@@ -1091,7 +1154,7 @@ namespace ProjetP3DScene1
                                 try
                                 {
                                     Sprite pngTypeAttaque3 = Resources.Load<Sprite>("Images/Types/" + typeAttaque3);
-                                    boutons_attaque.transform.GetChild(2).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque3;
+                                    canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(2).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque3;
                                 }
                                 catch
                                 {
@@ -1100,23 +1163,23 @@ namespace ProjetP3DScene1
                             }
                         }
 
-                        if (pokemonJoueurSelectionner.getListeAttaque().Count > 3)
+                        if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getListeAttaque().Count > 3)
                         {
-                            if (pokemonJoueurSelectionner.getAttaque4().getNom() != "default")
+                            if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque4().getNom() != "default")
                             {
                                 // Chargement de l'interface de l'attaque et de ses propriétés
-                                Text texteBoutonAttaque4 = boutons_attaque.transform.GetChild(3).gameObject.transform.GetChild(0).GetComponent<Text>();
-                                texteBoutonAttaque4.text = pokemonJoueurSelectionner.getAttaque4().getNom();
-                                Text textePPAttaque4 = boutons_attaque.transform.GetChild(3).gameObject.transform.GetChild(1).GetComponent<Text>();
-                                textePPAttaque4.text = "PP " + pokemonJoueurSelectionner.getAttaque4().getPPRestant() + "/" + pokemonJoueurSelectionner.getAttaque4().getPP();
+                                Text texteBoutonAttaque4 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(3).gameObject.transform.GetChild(0).GetComponent<Text>();
+                                texteBoutonAttaque4.text = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque4().getNom();
+                                Text textePPAttaque4 = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(3).gameObject.transform.GetChild(1).GetComponent<Text>();
+                                textePPAttaque4.text = "PP " + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque4().getPPRestant() + "/" + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque4().getPP();
 
-                                string typeAttaque4 = pokemonJoueurSelectionner.getAttaque4().getTypeAttaque();
+                                string typeAttaque4 = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getAttaque4().getTypeAttaque();
                                 if (typeAttaque4 != null)
                                 {
                                     try
                                     {
                                         Sprite pngAttaque4 = Resources.Load<Sprite>("Images/Combat/bouton_type_" + typeAttaque4);
-                                        boutons_attaque.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = pngAttaque4;
+                                        canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = pngAttaque4;
                                     }
                                     catch
                                     {
@@ -1126,7 +1189,7 @@ namespace ProjetP3DScene1
                                     try
                                     {
                                         Sprite pngTypeAttaque4 = Resources.Load<Sprite>("Images/Types/" + typeAttaque4);
-                                        boutons_attaque.transform.GetChild(3).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque4;
+                                        canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(3).gameObject.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = pngTypeAttaque4;
                                     }
                                     catch
                                     {
@@ -1138,19 +1201,19 @@ namespace ProjetP3DScene1
                     }
                 }
 
-                boutons_combat.SetActive(false);
-                boutons_attaque.SetActive(true);
-                boutons_attaque.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.SetActive(false); // Boutons combat
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.SetActive(true);  // Boutons attaque
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
             }
         }
 
         /// <summary>
         /// Cette méthode s'active quand le joueur décide d'annuler une attaque pour revenir dans le menu de combat
-        public void btn_retour_menu_combat_click()
+        public void btn_retour_menu_combat_click(int positionJoueur)
         {
-            boutons_attaque.SetActive(false);
-            boutons_combat.SetActive(true);
-            boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
+            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.SetActive(false); // Desactivation bouton attaque
+            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.SetActive(true); // Activation bouton combat
+            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).transform.GetChild(0).gameObject.GetComponent<Button>().Select();
         }
 
         /// <summary>
@@ -1170,29 +1233,42 @@ namespace ProjetP3DScene1
             boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
         }
 
-        public void btn_retour_apres_menu_start_click()
-        {
-            Resume();
-            jeuEnPause = false;
-        }
-
-        public void btn_retour_apres_menu_pokemon_click()
-        {
-            if (EnCombat == true)
+        public void btn_retour_apres_menu_pokemon_click(int positionJoueur)
+        { 
+            if (JoueurManager.Joueurs[positionJoueur].enCombat == true)
             {
                 menu.SetActive(false);
                 UICombat.SetActive(true);
                 boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
             }            
-            else if(EnCombat == false && jeuEnPause == true && menu.transform.GetChild(0).gameObject.activeSelf == true && menuPokemonStatistiques.activeSelf == false)
+            else if(JoueurManager.Joueurs[positionJoueur].enCombat == false && jeuEnPause == true && menu.transform.GetChild(0).gameObject.activeSelf == true && menuPokemonStatistiques.activeSelf == false)
             {
+                Debug.Log(positionJoueur);
+                menu.transform.GetChild(1).GetComponent<DeplacementPokemonMenuScript>().EnTrainDeDeplacerPokemon = false;
+                menu.transform.GetChild(1).GetComponent<DeplacementPokemonMenuScript>().boutonConfirmerChangementPositionGameObject.SetActive(false);
                 menu.SetActive(false);
-                MenuPauseActuel = "MenuStart";
+                menuStart.transform.GetChild(2).gameObject.GetComponent<Button>().Select();
+                JoueurManager.Joueurs[positionJoueur].menuPauseActuel = "MenuStart";
             }
-            else if(EnCombat == false && jeuEnPause == true && menu.transform.GetChild(0).gameObject.activeSelf == false && menuPokemonStatistiques.activeSelf == true)
+            else if(JoueurManager.Joueurs[positionJoueur].enCombat == false && jeuEnPause == true && menu.transform.GetChild(0).gameObject.activeSelf == false && menuPokemonStatistiques.activeSelf == true)
             {
                 btn_retour_menu_pokemon_apres_menu_statistiques_click();
             }
+        }
+
+        // On retourne au menu start
+        public void btn_retour_menu_start_apres_menu_selection_personnages()
+        {
+            canvasGameObject[0].transform.GetChild(12).gameObject.SetActive(false); // On enlève le menu de selection
+            menuStart.transform.GetChild(7).gameObject.GetComponent<Button>().Select();
+            JoueurManager.Joueurs[0].menuPauseActuel = "MenuStart";
+        }
+
+
+        // On enlève le menu de selection des personnages
+        public void btn_retour_apres_menu_selection_personnages()
+        {
+            canvasGameObject[0].transform.GetChild(12).gameObject.SetActive(false); // On enlève le menu de selection
         }
 
         /// <summary>
@@ -1214,11 +1290,11 @@ namespace ProjetP3DScene1
             }
 
             // Remplissage de l'interface des objets de soin
-            for (int i = 0; i < Joueur.getObjetsSac().Count; i++)
+            for (int i = 0; i < JoueurManager.Joueurs[0].getObjetsSac().Count; i++)
             {
-                if (Joueur.getObjetsSac()[i].getQuantiteObjet() > 0 && Joueur.getObjetsSac()[i].getTypeObjet() == "Soin")
+                if (JoueurManager.Joueurs[0].getObjetsSac()[i].getQuantiteObjet() > 0 && JoueurManager.Joueurs[0].getObjetsSac()[i].getTypeObjet() == "Soin")
                 {
-                    GameObject boutonObjetGameObject = CreateButton(scroll_objets.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform, Joueur.getObjetsSac()[i].getNom(), 320, 160, Joueur.getObjetsSac()[i].getNom(), 38);
+                    GameObject boutonObjetGameObject = this.gameObject.GetComponent<CreerComposantScript>().CreateButton(scroll_objets.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform, JoueurManager.Joueurs[0].getObjetsSac()[i].getNom(), 320, 160, JoueurManager.Joueurs[0].getObjetsSac()[i].getNom(), 38);
                     Button boutonObjet = boutonObjetGameObject.GetComponent<Button>();
                     boutonObjet.onClick.AddListener(() => { btn_all_objets_click(boutonObjet); });
 
@@ -1250,11 +1326,11 @@ namespace ProjetP3DScene1
             }
 
             // Remplissage de l'interface des objets de capture
-            for (int i = 0; i < Joueur.getObjetsSac().Count; i++)
+            for (int i = 0; i < JoueurManager.Joueurs[0].getObjetsSac().Count; i++)
             {
-                if (Joueur.getObjetsSac()[i].getQuantiteObjet() > 0 && Joueur.getObjetsSac()[i].getTypeObjet() == "Capture")
+                if (JoueurManager.Joueurs[0].getObjetsSac()[i].getQuantiteObjet() > 0 && JoueurManager.Joueurs[0].getObjetsSac()[i].getTypeObjet() == "Capture")
                 {
-                    GameObject boutonObjetGameObject = CreateButton(scroll_objets.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform, Joueur.getObjetsSac()[i].getNom(), 320, 160, Joueur.getObjetsSac()[i].getNom(), 38);
+                    GameObject boutonObjetGameObject = this.gameObject.GetComponent<CreerComposantScript>().CreateButton(scroll_objets.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform, JoueurManager.Joueurs[0].getObjetsSac()[i].getNom(), 320, 160, JoueurManager.Joueurs[0].getObjetsSac()[i].getNom(), 38);
                     Button boutonObjet = boutonObjetGameObject.GetComponent<Button>();
                     boutonObjet.onClick.AddListener(() => { btn_all_pokeball_click(boutonObjet); });
 
@@ -1270,7 +1346,7 @@ namespace ProjetP3DScene1
         public void btn_all_pokeball_click(Button boutonCliquer)
         {
             // Si le pokémon du joueur est actuellement endormi, on lui fait passer un tour de sommeil puisque l'utilisation d'un objet de soin compte comme un tour
-            if (pokemonJoueurSelectionner.getStatutPokemon() == "Sommeil")
+            if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Sommeil")
             {
                 nombreTourSommeil++;
             }
@@ -1305,11 +1381,12 @@ namespace ProjetP3DScene1
             animator.Play("Red throw pokeball");
             animatorPokeball.Play("Ball throw");
 
-            dialogueCombat.getDialogue().AddSentence(Joueur.getNom() + " utilise " + boutonCliquer.name);
+            dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].getNom() + " utilise " + boutonCliquer.name);
 
             StartCoroutine(DialogueCombat());
 
-            timerAnimationCapture();
+            // timerAnimationCapture();
+            StartCoroutine("tourCapturePokemon");
         }
 
         /// <summary>
@@ -1318,42 +1395,42 @@ namespace ProjetP3DScene1
        {            
             if (listeObjetsContent != null)
             {
-                for (int i = 0; i < Joueur.getObjetsSac().Count; i++)
+                for (int i = 0; i < JoueurManager.Joueurs[0].getObjetsSac().Count; i++)
                 {
-                    if (boutonCliquer.name == Joueur.getObjetsSac()[i].getNom())
+                    if (boutonCliquer.name == JoueurManager.Joueurs[0].getObjetsSac()[i].getNom())
                     {
                       //  label_nb_potion.Text = Joueur.getObjetsSac()[i].getQuantiteObjet().ToString();
 
                       //  label_nb_potion.Visible = true;
                       //  label_potion.Visible = true;
 
-                        if (pokemonJoueurSelectionner.getPvRestant() != pokemonJoueurSelectionner.getPv())
+                        if (JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() != JoueurManager.Joueurs[0].pokemonSelectionner.getPv())
                         {
-                            int pvRestantAvantSoin = pokemonJoueurSelectionner.getPvRestant();
+                            int pvRestantAvantSoin = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
                             gagnePvPokemonJoueur = true;
-                            compteur = pokemonJoueurSelectionner.getPvRestant();
+                            compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
 
-                            Joueur.getObjetsSac()[i].Soin(pokemonJoueurSelectionner, Joueur.getObjetsSac()[i]); // Soin du pokémon
+                            JoueurManager.Joueurs[0].getObjetsSac()[i].Soin(JoueurManager.Joueurs[0].pokemonSelectionner, JoueurManager.Joueurs[0].getObjetsSac()[i]); // Soin du pokémon
 
-                            if (pokemonJoueurSelectionner.getPvRestant() + Joueur.getObjetsSac()[i].getValeurObjet() < pokemonJoueurSelectionner.getPv())
+                            if (JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() + JoueurManager.Joueurs[0].getObjetsSac()[i].getValeurObjet() < JoueurManager.Joueurs[0].pokemonSelectionner.getPv())
                             {
-                                dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " regagne " + Joueur.getObjetsSac()[i].getValeurObjet() + " PV");
+                                dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " regagne " + JoueurManager.Joueurs[0].getObjetsSac()[i].getValeurObjet() + " PV");
                                 StartCoroutine(DialogueCombat());
                             }
                             else
                             {
-                                int pvObtenu = pokemonJoueurSelectionner.getPvRestant() - pvRestantAvantSoin;
-                                dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " regagne " + pvObtenu + " PV");
+                                int pvObtenu = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - pvRestantAvantSoin;
+                                dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " regagne " + pvObtenu + " PV");
                                 StartCoroutine(DialogueCombat());
                             }
 
-                            dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " a " + pokemonJoueurSelectionner.getPvRestant() + " PV");
+                            dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " a " + JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() + " PV");
                             dialogueCombat.getDialogue().AddSentence(pokemon.getNom() + " sauvage a " + pokemon.getPvRestant() + " PV");
                             StartCoroutine(DialogueCombat());
 
-                            rafraichirBarreViePokemonJoueur();
+                            StartCoroutine("rafraichirApresSoinPokemonJoueur");
 
-                            dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " a " + pokemonJoueurSelectionner.getPvRestant() + " PV");
+                            dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " a " + JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() + " PV");
                             StartCoroutine(DialogueCombat());
 
                             scroll_objets.SetActive(false);
@@ -1418,7 +1495,7 @@ namespace ProjetP3DScene1
             MessageBox.Show("Il n'y aucun objet", "Vérification objet", MessageBoxButtons.OK, MessageBoxIcon.Error);
         } */
 
-        public void btn_fuite_click()
+        public void btn_fuite_click(int positionJoueur)
         {
             // Désactivation de l'interface de combat
             UIJoueur.SetActive(false);
@@ -1426,35 +1503,81 @@ namespace ProjetP3DScene1
             boutons_combat.SetActive(false);
             BoiteDialogue.SetActive(false);
 
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+
             GameObjectMusique.GetComponent<AudioSource>().Stop();
             GameObjectMusique.GetComponent<AudioSource>().clip = null;
 
             Destroy(GameObject.FindGameObjectWithTag("PokemonJoueur"));
-            Destroy(GameObject.FindGameObjectWithTag("PokemonAdverse"));
+
+            if (EnCombatContre == "PokemonDresseur")
+            {
+                Destroy(pokemonAdverseGameObject);
+            }
+            else if (EnCombatContre == "PokemonSauvage")
+            {
+                foreach (Transform t in pokemonAdverseGameObject.transform)
+                {
+                    if (t.gameObject.name == "NomPokemon3D")
+                    {
+                        Destroy(t.gameObject);
+                        break;
+                    }
+                }
+            }
 
             TimelineCameraCombat.Stop();
 
-            GameObjectJoueurCamera.SetActive(true);
-            cameraCombat.SetActive(false);
-             
-            EnCombat = false;
+            canvasGameObject[positionJoueur].GetComponent<Canvas>().worldCamera = controllerJoueurs[positionJoueur].GetComponent<Camera>();
+            controllerJoueurs[0].SetActive(true);
+            cameraCombatJoueurs[positionJoueur].SetActive(false);
+
+            JoueurManager.Joueurs[positionJoueur].enCombat = false;
         }
 
         public void btn_changement_pokemon_click()
         {
-            rafraichirEquipe();
+            rafraichirEquipe(0, canvasGameObject[0]);
             UICombat.SetActive(false);
             menu.SetActive(true);
-            menu.transform.GetChild(2).gameObject.GetComponent<Button>().Select();
+            menu.transform.GetChild(3).gameObject.GetComponent<Button>().Select();
         }
 
         public void btn_ouvrir_menu_options_pokemon_click(int positionPokemonCliquer)
         {
-            GameObject menuOptionsPokemonGameobject = menu.transform.GetChild(3).gameObject;
-            menuOptionsPokemonGameobject.transform.position = new Vector3(menuOptionsPokemonGameobject.transform.position.x, menu.transform.GetChild(0).gameObject.transform.GetChild(positionPokemonCliquer).gameObject.transform.position.y, menuOptionsPokemonGameobject.transform.position.z);
+            GameObject menuOptionsPokemonGameobject = menu.transform.GetChild(2).gameObject;
+            menuOptionsPokemonGameobject.transform.position = new Vector3(menuOptionsPokemonGameobject.transform.position.x, menu.transform.GetChild(1).gameObject.transform.GetChild(positionPokemonCliquer).gameObject.transform.position.y, menuOptionsPokemonGameobject.transform.position.z);
+
+            if (JoueurManager.Joueurs[0].enCombat == true)
+            {
+                menuOptionsPokemonGameobject.transform.GetChild(1).gameObject.SetActive(true);
+            }
+            else
+            {
+                menuOptionsPokemonGameobject.transform.GetChild(1).gameObject.SetActive(true);
+            }
+
             menuOptionsPokemonGameobject.SetActive(true);
-            menuOptionsPokemonGameobject.transform.GetChild(1).gameObject.GetComponent<Button>().Select();
+            menuOptionsPokemonGameobject.transform.GetChild(3).gameObject.GetComponent<Button>().Select();
             positionPokemonMenuPokemon = positionPokemonCliquer;
+        }
+
+        /// <summary>
+        /// Cette méthode va permettre d'aller au menu principal depuis le menu start
+        public void btn_ouvrir_menu_principal(int positionPokemonCliquer)
+        {
+            Time.timeScale = 1f; // On remet le temps normal
+            DonneesChargement.nomSceneSuivante = "SceneMenu"; // On dit de charger le menu principal
+            SceneManager.LoadScene("SceneChargement");
+        }
+
+        /// <summary>
+        /// Cette méthode va permettre de quitter le jeu
+        public void btn_quitter_jeu(int positionPokemonCliquer)
+        {
+            Time.timeScale = 1f; // On remet le temps normal
+            Application.Quit();
         }
 
         public void changementPokemonAdversaire()
@@ -1468,7 +1591,7 @@ namespace ProjetP3DScene1
                     if (dresseurAdverse.getPokemonEquipe()[i].getPvRestant() > 0 && pokemonEnVieTrouver == false)
                     {
                         pokemon = dresseurAdverse.getPokemonEquipe()[i];
-                        rafraichirBarreViePokemonAdversaire2();
+                        rafraichirBarreViePokemonAdversaire2(0);
                         compteurAdversaire = dresseurAdverse.getPokemonEquipe()[i].getPvRestant();
                         pokemonEnVieTrouver = true;
                     }
@@ -1479,45 +1602,89 @@ namespace ProjetP3DScene1
                     dialogueCombat.getDialogue().AddSentence("Vous avez gagné le combat contre " + dresseurAdverse.getNom());
                     StartCoroutine(DialogueCombat());
 
-                    btn_fuite_click();
+                    btn_fuite_click(0);
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Cette méthode va permettre d'ouvrir ou fermer la carte
+        public void btn_carte(int positionJoueur)
+        { 
+            if (mapGameObject.activeSelf == false) // Si la carte n'est pas active, on la met
+            {
+                if (cameraMapGameObject.activeSelf == false)
+                {
+                    cameraMapGameObject.SetActive(true);
+                }
+
+                /*
+                if (jeuEnPause == false) // On met le jeu en pause
+                {
+                    menuStart.GetComponent<MenuStartScript>().Pause(positionJoueur);
+                    jeuEnPause = true;
+                }
+                */
+              //  mapGameObject.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject.transform.InverseTransformPoint(JoueurManager.JoueursGameObject[0].transform.GetChild(4).gameObject.transform.position);
+                mapGameObject.SetActive(true);
+            }
+
+            else // Sinon on l'enlève
+            {
+                if (cameraMapGameObject.activeSelf == true)
+                {
+                    cameraMapGameObject.SetActive(false);
+                }
+                mapGameObject.SetActive(false);
+
+                /*
+                    if (JoueurManager.Joueurs[positionJoueur].menuPauseActuel == "MenuStart")
+                    {
+                        menuStart.GetComponent<MenuStartScript>().Resume();
+                        JoueurManager.Joueurs[positionJoueur].menuPauseActuel = "";
+                        jeuEnPause = false;
+                    }
+                    */
+                }
         }
 
         /// <summary>
         /// Cette méthode gère l'appui sur le bouton de la première attaque du pokémon
         public void btn_attaque1_click()
         {
-            attaqueCombat(pokemonJoueurSelectionner.getAttaque1());
+            // attaqueCombat(pokemonJoueurSelectionner.getAttaque1());
+            attaqueCombatReecriture(JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque1());
         }
 
         /// <summary>
         /// Cette méthode gère l'appui sur le bouton de la deuxième attaque du pokémon
         public void btn_attaque2_click()
         {
-            attaqueCombat(pokemonJoueurSelectionner.getAttaque2());
+            // attaqueCombat(pokemonJoueurSelectionner.getAttaque2());
+            attaqueCombatReecriture(JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque2());
         }
 
         /// <summary>
         /// Cette méthode gère l'appui sur le bouton de la troisième attaque du pokémon
         public void btn_attaque3_click()
         {
-            attaqueCombat(pokemonJoueurSelectionner.getAttaque3());
+            attaqueCombatReecriture(JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque3());
         }
 
         /// <summary>
         /// Cette méthode gère l'appui sur le bouton de la quatrième attaque du pokémon
         public void btn_attaque4_click()
         {
-            attaqueCombat(pokemonJoueurSelectionner.getAttaque4());
+            attaqueCombatReecriture(JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque4());
         }
 
         public void btn_ouvrir_menu_statistiques_click()
         {
-            menu.transform.GetChild(0).gameObject.SetActive(false);
+            menu.transform.GetChild(1).gameObject.SetActive(false);
             menuPokemonStatistiques.SetActive(true); // Activation de la page des statistiques
 
-            int idPokedexImage = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getNoIdPokedex();
+            int idPokedexImage = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getNoIdPokedex();
 
             try
             {
@@ -1529,94 +1696,146 @@ namespace ProjetP3DScene1
 
             }
 
-            menuPokemonStatistiques.transform.GetChild(1).gameObject.GetComponent<Text>().text = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getNom();
-            menuPokemonStatistiques.transform.GetChild(2).gameObject.GetComponent<Text>().text = "N°" + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getNiveau().ToString();
+            menuPokemonStatistiques.transform.GetChild(1).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getNom();
+            menuPokemonStatistiques.transform.GetChild(2).gameObject.GetComponent<Text>().text = "N°" + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getNiveau().ToString();
 
-            if (Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getSexe() == "Feminin")
+            if (JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getSexe() == "Feminin")
             {
                 menuPokemonStatistiques.transform.GetChild(3).gameObject.GetComponent<Text>().text = "♀";
                 menuPokemonStatistiques.transform.GetChild(3).gameObject.GetComponent<Text>().color = new Color32(232, 0, 255, 1);
             }
-            else if (Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getSexe() == "Masculin")
+            else if (JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getSexe() == "Masculin")
             {
                 menuPokemonStatistiques.transform.GetChild(3).gameObject.GetComponent<Text>().text = "♂";
                 menuPokemonStatistiques.transform.GetChild(3).gameObject.GetComponent<Text>().color = Color.blue;
             }
 
-            menuPokemonStatistiques.transform.GetChild(4).gameObject.GetComponent<Text>().text = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getPvRestant() + " / " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getPv() + " PV";
-            menuPokemonStatistiques.transform.GetChild(5).gameObject.GetComponent<Text>().text = "Attaque : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesAttaque();
-            menuPokemonStatistiques.transform.GetChild(6).gameObject.GetComponent<Text>().text = "Defense : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesDefense();
-            menuPokemonStatistiques.transform.GetChild(7).gameObject.GetComponent<Text>().text = "Vitesse : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesVitesse();
-            menuPokemonStatistiques.transform.GetChild(8).gameObject.GetComponent<Text>().text = "Attaque Speciale : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesAttaqueSpeciale();
-            menuPokemonStatistiques.transform.GetChild(9).gameObject.GetComponent<Text>().text = "Defense Speciale : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesDefenseSpeciale();
-            menuPokemonStatistiques.transform.GetChild(10).gameObject.GetComponent<Text>().text = "Experience : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getExperience();
+            menuPokemonStatistiques.transform.GetChild(4).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getPvRestant() + " / " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getPv() + " PV";
+            menuPokemonStatistiques.transform.GetChild(5).gameObject.GetComponent<Text>().text = "Attaque : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesAttaque();
+            menuPokemonStatistiques.transform.GetChild(6).gameObject.GetComponent<Text>().text = "Defense : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesDefense();
+            menuPokemonStatistiques.transform.GetChild(7).gameObject.GetComponent<Text>().text = "Vitesse : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesVitesse();
+            menuPokemonStatistiques.transform.GetChild(8).gameObject.GetComponent<Text>().text = "Attaque Speciale : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesAttaqueSpeciale();
+            menuPokemonStatistiques.transform.GetChild(9).gameObject.GetComponent<Text>().text = "Defense Speciale : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getStatistiquesDefenseSpeciale();
+            menuPokemonStatistiques.transform.GetChild(10).gameObject.GetComponent<Text>().text = "Experience : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getExperience();
 
-            menuPokemonStatistiques.transform.GetChild(11).gameObject.GetComponent<Text>().text = "EV PV : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getEvPv();
-            menuPokemonStatistiques.transform.GetChild(12).gameObject.GetComponent<Text>().text = "EV Attaque : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getEvAttaque();
-            menuPokemonStatistiques.transform.GetChild(13).gameObject.GetComponent<Text>().text = "EV Defense : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getEvDefense();
-            menuPokemonStatistiques.transform.GetChild(14).gameObject.GetComponent<Text>().text = "EV Vitesse : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getEvVitesse();
-            menuPokemonStatistiques.transform.GetChild(15).gameObject.GetComponent<Text>().text = "EV Attaque Speciale : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getEvAttaqueSpeciale();
-            menuPokemonStatistiques.transform.GetChild(16).gameObject.GetComponent<Text>().text = "EV Defense Speciale : " + Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getEvDefenseSpeciale();
+            menuPokemonStatistiques.transform.GetChild(11).gameObject.GetComponent<Text>().text = "EV PV : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getEvPv();
+            menuPokemonStatistiques.transform.GetChild(12).gameObject.GetComponent<Text>().text = "EV Attaque : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getEvAttaque();
+            menuPokemonStatistiques.transform.GetChild(13).gameObject.GetComponent<Text>().text = "EV Defense : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getEvDefense();
+            menuPokemonStatistiques.transform.GetChild(14).gameObject.GetComponent<Text>().text = "EV Vitesse : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getEvVitesse();
+            menuPokemonStatistiques.transform.GetChild(15).gameObject.GetComponent<Text>().text = "EV Attaque Speciale : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getEvAttaqueSpeciale();
+            menuPokemonStatistiques.transform.GetChild(16).gameObject.GetComponent<Text>().text = "EV Defense Speciale : " + JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getEvDefenseSpeciale();
 
-            if (pokemonJoueurSelectionner.getListeAttaque().Count > 0)
+            if (JoueurManager.Joueurs[0].pokemonSelectionner.getListeAttaque().Count > 0)
             {
-                if (pokemonJoueurSelectionner.getAttaque1().getNom() != "default")
+                if (JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque1().getNom() != "default")
                 {
-                    menuPokemonStatistiques.transform.GetChild(17).gameObject.GetComponent<Text>().text = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque1().getNom();
+                    menuPokemonStatistiques.transform.GetChild(17).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque1().getNom();
                 }
 
-                if (pokemonJoueurSelectionner.getListeAttaque().Count > 1)
+                if (JoueurManager.Joueurs[0].pokemonSelectionner.getListeAttaque().Count > 1)
                 {
-                    if (pokemonJoueurSelectionner.getAttaque2().getNom() != "default")
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque2().getNom() != "default")
                     {
-                        menuPokemonStatistiques.transform.GetChild(18).gameObject.GetComponent<Text>().text = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque2().getNom();
+                        menuPokemonStatistiques.transform.GetChild(18).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque2().getNom();
                     }
 
-                    if (pokemonJoueurSelectionner.getListeAttaque().Count > 2)
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getListeAttaque().Count > 2)
                     {
-                        if (pokemonJoueurSelectionner.getAttaque3().getNom() != "default")
+                        if (JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque3().getNom() != "default")
                         {
-                            menuPokemonStatistiques.transform.GetChild(19).gameObject.GetComponent<Text>().text = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque3().getNom();
+                            menuPokemonStatistiques.transform.GetChild(19).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque3().getNom();
                         }
 
-                        if (pokemonJoueurSelectionner.getListeAttaque().Count > 3)
+                        if (JoueurManager.Joueurs[0].pokemonSelectionner.getListeAttaque().Count > 3)
                         {
-                            if (pokemonJoueurSelectionner.getAttaque4().getNom() != "default")
+                            if (JoueurManager.Joueurs[0].pokemonSelectionner.getAttaque4().getNom() != "default")
                             {
-                                menuPokemonStatistiques.transform.GetChild(20).gameObject.GetComponent<Text>().text = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque4().getNom();
+                                menuPokemonStatistiques.transform.GetChild(20).gameObject.GetComponent<Text>().text = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getAttaque4().getNom();
                             }
                         }
                     }
                 }
             }
 
-            if (Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getType() != null)
+            if (JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getType() != null)
             {
-                string typePokemon = Joueur.getPokemonEquipe()[positionPokemonMenuPokemon].getType();
+                string typePokemon = JoueurManager.Joueurs[0].getPokemonEquipe()[positionPokemonMenuPokemon].getType();
                 Sprite imagePokemon = Resources.Load<Sprite>("Images/Types/" + typePokemon);
                 menuPokemonStatistiques.transform.GetChild(21).gameObject.GetComponent<Image>().sprite = imagePokemon;
                 menuPokemonStatistiques.transform.GetChild(21).gameObject.SetActive(true);
             }
         }
 
-        public void btn_ouvrir_menu_pokemon_click()
+        public void btn_ouvrir_menu_pokemon_click(int positionJoueur)
         {
-            if (Joueur.getPokemonEquipe().Count > 0)
+            Debug.Log(positionJoueur);
+
+            if (JoueurManager.Joueurs[positionJoueur].getPokemonEquipe().Count > 0)
             {
-                menu.SetActive(true);
-                MenuPauseActuel = "MenuPokemon";
+                GameObject canvas = canvasGameObject[0];
+
+                if (positionJoueur == 1)
+                {
+                    canvas = GameObject.Find("CanvasJoueur2");
+                }
+
+                rafraichirEquipe(positionJoueur, canvas);
+                canvas.transform.GetChild(4).gameObject.SetActive(true);
+                canvas.transform.GetChild(4).transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
+                JoueurManager.Joueurs[positionJoueur].menuPauseActuel = "MenuPokemon";
+            }
+        }
+
+        // Si le menu n'est pas ouvert, on l'ouvre sinon on le ferme
+        public void btn_ouvrir_menu_personnages_selection()
+        {
+            if (canvasGameObject[0].transform.GetChild(12).gameObject.activeSelf == false)
+            {
+                canvasGameObject[0].transform.GetChild(12).gameObject.SetActive(true);
+            }
+            else
+            {
+                canvasGameObject[0].transform.GetChild(12).gameObject.SetActive(false);
+            }
+        }
+
+        // Si le menu n'est pas ouvert, on l'ouvre sinon on le ferme
+        public void btn_ouvrir_menu_commandes()
+        {
+            if (canvasGameObject[0].transform.GetChild(10).gameObject.activeSelf == false)
+            {
+                canvasGameObject[0].transform.GetChild(10).gameObject.SetActive(true);
+            }
+            else
+            {
+                canvasGameObject[0].transform.GetChild(10).gameObject.SetActive(false);
+            }
+        }
+
+        // Si le menu n'est pas ouvert, on l'ouvre sinon on le ferme
+        public void btn_ouvrir_menu_montures()
+        {
+            if (canvasGameObject[0].transform.GetChild(13).gameObject.activeSelf == false)
+            {
+                canvasGameObject[0].transform.GetChild(13).gameObject.SetActive(true);
+                canvasGameObject[0].transform.GetChild(0).gameObject.GetComponent<MenuStartScript>().btn_retour_apres_menu_start_click(); // On enlève le menu pause
+            }
+            else
+            {
+                canvasGameObject[0].transform.GetChild(13).gameObject.SetActive(false);
             }
         }
 
         public void btn_retour_menu_pokemon_apres_menu_statistiques_click()
         {
-            menu.transform.GetChild(1).gameObject.SetActive(false);
+            menu.transform.GetChild(2).gameObject.SetActive(false);
             menu.transform.GetChild(0).gameObject.SetActive(true);
         }
 
         public void btn_retour_menu_pokemon_apres_menu_pokemon_options_click()
         {
-            menu.transform.GetChild(3).gameObject.SetActive(false);
+            menu.transform.GetChild(2).gameObject.SetActive(false);
+            menu.transform.GetChild(1).gameObject.transform.GetChild(positionPokemonMenuPokemon).gameObject.GetComponent<Button>().Select();
         }
 
         public void btn_retour_menu_pokemon_apres_menu_pc_click()
@@ -1625,35 +1844,39 @@ namespace ProjetP3DScene1
             OuverturePC = false;
         }
 
-        public void rafraichirBarreViePokemonJoueur2()
+        public void rafraichirBarreViePokemonJoueur2(int positionJoueur)
         {
-            Text LabelNomPokemonJoueur = UIJoueur.transform.GetChild(1).gameObject.GetComponent<Text>();
-            LabelPvPokemonJoueurUI = UIJoueur.transform.GetChild(2).gameObject.GetComponent<Text>();
-            Text LabelSexePokemonJoueur = UIJoueur.transform.GetChild(4).gameObject.GetComponent<Text>();
+            Text LabelNomPokemonJoueur = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.transform.GetChild(2).gameObject.GetComponent<Text>();
+            LabelPvPokemonJoueurUI = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.transform.GetChild(3).gameObject.GetComponent<Text>();
+            Text LabelSexePokemonJoueur = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.transform.GetChild(5).gameObject.GetComponent<Text>();
+            Text LabelNiveauPokemonJoueurUI = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.transform.GetChild(4).gameObject.GetComponent<Text>();
+            barViePokemonJoueur = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(0).gameObject.transform.GetChild(1).transform.GetChild(3).gameObject;
+            barViePokemonJoueurImage = barViePokemonJoueur.GetComponent<Image>();
 
-            LabelNomPokemonJoueur.text = pokemonJoueurSelectionner.getNom();
-            LabelPvPokemonJoueurUI.text = pokemonJoueurSelectionner.getPvRestant().ToString() + " / " + pokemonJoueurSelectionner.getPv().ToString() + " PV";
-            LabelNiveauPokemonJoueurUI.text = "N. " + pokemonJoueurSelectionner.getNiveau();
+            LabelNomPokemonJoueur.text = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getNom();
+            LabelPvPokemonJoueurUI.text = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getPvRestant().ToString() + " / " + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getPv().ToString() + " PV";
+            LabelNiveauPokemonJoueurUI.text = "N. " + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getNiveau();
 
-            if (pokemonJoueurSelectionner.getSexe() == "Feminin")
+            if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getSexe() == "Feminin")
             {
                 LabelSexePokemonJoueur.text = "♀";
                 LabelSexePokemonJoueur.color = new Color32(255, 130, 192, 255);
             }
-            else if (pokemonJoueurSelectionner.getSexe() == "Masculin")
+            else if (JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getSexe() == "Masculin")
             {
                 LabelSexePokemonJoueur.text = "♂";
                 LabelSexePokemonJoueur.color = new Color32(0, 128, 255, 255);
             }
 
-            barViePokemonJoueurImage.fillAmount = (100 * pokemonJoueurSelectionner.getPvRestant()) / pokemonJoueurSelectionner.getPv();
+            barViePokemonJoueurImage.fillAmount = (float)JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getPvRestant() / (float)JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getPv();
         }
 
-        public void rafraichirBarreViePokemonAdversaire2()
+        public void rafraichirBarreViePokemonAdversaire2(int positionJoueur)
         {
-            Text LabelNomPokemonAdversaire = UIAdversaire.transform.GetChild(1).gameObject.GetComponent<Text>();
-            Text LabelNiveauPokemonAdversaire = UIAdversaire.transform.GetChild(3).gameObject.GetComponent<Text>();
-            Text LabelSexePokemonAdversaire = UIAdversaire.transform.GetChild(4).gameObject.GetComponent<Text>();
+            Text LabelNomPokemonAdversaire = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.transform.GetChild(2).gameObject.GetComponent<Text>();
+            Text LabelNiveauPokemonAdversaire = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.transform.GetChild(4).gameObject.GetComponent<Text>();
+            Text LabelSexePokemonAdversaire = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.GetComponent<Text>();
+            LabelPvPokemonAdversaireUI = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.transform.GetChild(3).gameObject.GetComponent<Text>();
 
             LabelNomPokemonAdversaire.text = pokemon.getNom();
             LabelPvPokemonAdversaireUI.text = pokemon.getPvRestant().ToString() + " / " + pokemon.getPv().ToString() + " PV";
@@ -1670,11 +1893,11 @@ namespace ProjetP3DScene1
                 LabelSexePokemonAdversaire.color = new Color32(0, 128, 255, 255);
             }
 
-            GameObject barViePokemonAdversaire = UIAdversaire.transform.GetChild(0).transform.GetChild(2).gameObject;
+            GameObject barViePokemonAdversaire = canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(1).gameObject.transform.GetChild(1).transform.GetChild(3).gameObject;
             Image barImagePokemonAdversaire = barViePokemonAdversaire.GetComponent<Image>();
 
             barViePokemonAdversaireImage.color = new Color32(81, 209, 39, 255);
-            barImagePokemonAdversaire.fillAmount = (100 * pokemon.getPvRestant()) / pokemon.getPv();
+            barImagePokemonAdversaire.fillAmount = (float)pokemon.getPvRestant() / (float)pokemon.getPv();
         }
 
         IEnumerator DialogueCombat()
@@ -1685,12 +1908,9 @@ namespace ProjetP3DScene1
             dialogueCombat.TriggerDialogue();
 
            yield return new WaitUntil(() => BoiteDialogueAnimator.GetBool("IsOpen") == false);
-
-            boutons_combat.SetActive(true);
-            boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
         }
 
-        IEnumerator DialogueCombatStart()
+        IEnumerator DialogueCombatStart(int positionJoueur)
         {
             // sceneBuilder.AddComponent<DialogueTrigger>();
             // DialogueTrigger dialogueCombat = sceneBuilder.GetComponent<DialogueTrigger>();
@@ -1699,86 +1919,188 @@ namespace ProjetP3DScene1
 
             yield return new WaitUntil(() => BoiteDialogueAnimator.GetBool("IsOpen") == false);
 
-            boutons_combat.SetActive(true);
-            boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
+            try
+            {
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.transform.GetChild(0).gameObject.transform.GetChild(1).gameObject.GetComponent<Image>().preserveAspect = true; // Changement icone pokemon sur l'interface du bouton attaque
+                canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.transform.GetChild(0).gameObject.transform.GetChild(1).GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Icones/" + JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getNoIdPokedex());
+            }
+            catch
+            {
+
+            }
+
+            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.transform.GetChild(0).gameObject.transform.GetChild(1).gameObject.SetActive(true);
+            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.SetActive(true); // Activation boutons combat
+            canvasGameObject[positionJoueur].transform.GetChild(1).gameObject.transform.GetChild(5).gameObject.transform.GetChild(0).gameObject.GetComponent<Button>().Select(); // Selection du bouton attaque
         }
 
-        void StartDialogueCombat()
+        void StartDialogueCombat(int positionJoueur)
         {
             dialogueCombat.getDialogue().AddSentence("Un " + pokemon.getNom() + " sauvage veut se battre");
             dialogueCombat.getDialogue().AddSentence("Il a " + pokemon.getPv() + " PV");
 
-            StartCoroutine(DialogueCombatStart());
+            StartCoroutine(DialogueCombatStart(positionJoueur));
 
-            compteur = pokemonJoueurSelectionner.getPvRestant();
+            compteur = JoueurManager.Joueurs[positionJoueur].pokemonSelectionner.getPvRestant();
             compteurAdversaire = pokemon.getPvRestant();
         }
+
+        private void Awake()
+        {
+            canvasGameObject[0] = canvasGameObjectJoueur;
+        }
+ /*
+        private IEnumerator coroutineThreadInitialisation()
+        {
+            // Initialisation des attaques, des pokémon, des starters, des objets
+           
+            Thread threadInitialisationAttaque = new Thread(jeu.initialisationAttaques);
+            threadInitialisationAttaque.Start();
+            yield return new WaitForSeconds(1f);
+
+            Thread threadInitialisationEspecePokemon = new Thread(jeu.initialisationEspecePokemon);
+            threadInitialisationEspecePokemon.Start();
+            yield return new WaitForSeconds(1f);
+
+            Thread threadInitialisationPokemon = new Thread(jeu.initialisationPokemon);
+            threadInitialisationPokemon.Start();
+            Thread threadInitialisationPokemonStarter = new Thread(jeu.initialisationPokemonStarter);
+            threadInitialisationPokemonStarter.Start();
+            Thread threadInitialisationSort = new Thread(jeu.initialisationSorts);
+            threadInitialisationSort.Start();
+            Thread threadInitialisationObjet = new Thread(jeu.initialisationObjets);
+            threadInitialisationObjet.Start();
+            
+            yield return null;
+            
+        } */
 
         // Start is called before the first frame update
         void Start()
         {
-            // Initialisation des attaques, des pokémon, des starters, des objets
-            Thread threadInitialisationAttaque = new Thread(jeu.initialisationAttaques);
-            threadInitialisationAttaque.Start();
-            Thread threadInitialisationPokemon = new Thread(jeu.initialisationPokemon);
-            threadInitialisationPokemon.Start();
+            jeu.initialisationAttaques();
+            jeu.initialisationEspecePokemon();
+            jeu.initialisationPokemon();
             jeu.initialisationPokemonStarter();
-            Thread threadInitialisationDresseur = new Thread(jeu.initialisationDresseurs);
-            threadInitialisationDresseur.Start();
-            Thread threadInitialisationObjet = new Thread(jeu.initialisationObjets);
-            threadInitialisationObjet.Start();
+            jeu.initialisationSorts();
+            jeu.initialisationObjets();
 
-            Joueur = PlayButton.Joueur;
+            jeu.initialisationPersonnage();
+
+            JoueurManager.Joueurs.Add(PlayButton.Joueur);
+            JoueurManager.Joueurs[0].pv = 50; // Initialisation des pv du joueur
+            JoueurManager.Joueurs[0].pvRestants = JoueurManager.Joueurs[0].pv;
+
+            JoueurManager.Joueurs[0].addSort(jeu.getListeSort()[0]); // On ajoute les sorts
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
             jeuInitialiser = true;
 
+            modeCombat = "Tour par tour";
+
             // Assignage des GameObjects
-            boutons_attaque = GameObject.Find("Canvas").transform.GetChild(1).gameObject.transform.GetChild(2).gameObject;
-            boutons_combat = GameObject.Find("Canvas").transform.GetChild(1).gameObject.transform.GetChild(5).gameObject;
-            scroll_objets = GameObject.Find("Canvas").transform.GetChild(1).gameObject.transform.GetChild(4).gameObject;
+            boutons_attaque = GameObject.Find("/Canvas").transform.GetChild(1).gameObject.transform.GetChild(2).gameObject;
+            boutons_combat = GameObject.Find("/Canvas").transform.GetChild(1).gameObject.transform.Find("BoutonsCombat").gameObject;
+            scroll_objets = GameObject.Find("/Canvas").transform.GetChild(1).gameObject.transform.GetChild(4).gameObject;
             listeObjetsContent = scroll_objets.transform.GetChild(0).gameObject.transform.GetChild(0).gameObject;
-            menu = GameObject.Find("Canvas").transform.GetChild(0).gameObject.transform.GetChild(4).gameObject;
-            menuPokemonStatistiques = menu.transform.GetChild(1).gameObject;
-            menuStart = GameObject.Find("Canvas").transform.GetChild(0).gameObject;
-            UICombat = GameObject.Find("Canvas").transform.GetChild(1).gameObject;
-            UIJoueur = GameObject.Find("Canvas").transform.GetChild(1).gameObject.transform.GetChild(0).gameObject;
-            UIAdversaire = GameObject.Find("Canvas").transform.GetChild(1).gameObject.transform.GetChild(1).gameObject;
-            barViePokemonJoueur = UIJoueur.transform.GetChild(0).transform.GetChild(2).gameObject;
+            menu = GameObject.Find("/Canvas").transform.GetChild(4).gameObject;
+            menuPokemonStatistiques = menu.transform.GetChild(3).gameObject;
+            menuStart = GameObject.Find("/Canvas").transform.GetChild(0).gameObject;
+            mapGameObject = GameObject.Find("/Canvas").transform.GetChild(9).gameObject;
+            UICombat = GameObject.Find("/Canvas").transform.GetChild(1).gameObject;
+            UIJoueur = GameObject.Find("/Canvas").transform.GetChild(1).gameObject.transform.GetChild(0).gameObject;
+            UIAdversaire = GameObject.Find("/Canvas").transform.GetChild(1).gameObject.transform.GetChild(1).gameObject;
+            barViePokemonJoueur = UIJoueur.transform.GetChild(1).transform.GetChild(3).gameObject;
             barViePokemonJoueurImage = barViePokemonJoueur.GetComponent<Image>();
-            barExperiencePokemonJoueur = UIJoueur.transform.GetChild(5).transform.GetChild(2).gameObject;
+            barExperiencePokemonJoueur = UIJoueur.transform.GetChild(6).transform.GetChild(1).gameObject;
             barExperiencePokemonJoueurImage = barExperiencePokemonJoueur.GetComponent<Image>();
-            barViePokemonAdversaire = UIAdversaire.transform.GetChild(0).transform.GetChild(2).gameObject;
+            barViePokemonAdversaire = UIAdversaire.transform.GetChild(1).transform.GetChild(3).gameObject;
             barViePokemonAdversaireImage = barViePokemonAdversaire.GetComponent<Image>();
-            LabelNiveauPokemonJoueurUI = UIJoueur.transform.GetChild(3).gameObject.GetComponent<Text>();
-            LabelPvPokemonAdversaireUI = UIAdversaire.transform.GetChild(2).gameObject.GetComponent<Text>();
-            StatistiquesChangementNiveau = UIJoueur.transform.GetChild(6).gameObject;
+            StatistiquesChangementNiveau = UIJoueur.transform.GetChild(7).gameObject;
             TableStarter = GameObject.Find("TableStarter");
             BoitePC = GameObject.Find("BoitePC");
             menuPC = GameObject.Find("Canvas").transform.GetChild(3).gameObject;
             PokeballBulbizarre = TableStarter.transform.GetChild(0).gameObject;
             PokeballSalameche = TableStarter.transform.GetChild(1).gameObject;
             PokeballCarapuce = TableStarter.transform.GetChild(2).gameObject;
-            BoiteDialogue = GameObject.Find("Canvas").transform.GetChild(1).gameObject.transform.GetChild(3).gameObject;
+            BoiteDialogue = GameObject.Find("/Canvas").transform.GetChild(1).gameObject.transform.GetChild(3).gameObject;
             BoiteDialogueTexte = BoiteDialogue.transform.GetChild(0).gameObject.GetComponent<Text>();
             BoiteDialogueAnimator = BoiteDialogue.GetComponent<Animator>();
             DialogueManagerGameObject = GameObject.Find("DialogueManager");
-            GameObjectJoueur = GameObject.Find("vThirdPersonCamera").transform.GetChild(1).gameObject.transform.GetChild(4).gameObject;
-            GameObjectJoueurCamera = GameObject.Find("vThirdPersonController");
-            cameraCombat = GameObject.Find("CameraCombat");
+            JoueurManager.JoueursGameObject[0] = GameObject.Find("Joueurs").gameObject.transform.GetChild(0).gameObject;
+            controllerJoueurs[0] = GameObject.Find("vThirdPersonController");
+            cameraCombatJoueurs[0] = GameObject.Find("CameraCombatJoueur");
+            cameraCombat = GameObject.Find("CameraCombatJoueur").transform.GetChild(0).gameObject;
+            cameraCombatUI = GameObject.Find("CameraCombatJoueur").transform.GetChild(1).gameObject;
+            cameraMapGameObject = GameObject.Find("CameraMap");
             GameObjectMusique = GameObject.Find("GameObjectMusique");
             sceneBuilder = GameObject.Find("SceneBuilder");
             dialogueCombat = sceneBuilder.GetComponent<DialogueTrigger>();
             TimelineAnimationLancerPokeball = GameObject.Find("Timeline").GetComponent<PlayableDirector>();
+            TimelinePokemonAccompagner = GameObject.Find("TimelinePokemonAccompagner").GetComponent<PlayableDirector>();
             TimelineCameraCombat = GameObject.Find("TimelineCamera").GetComponent<PlayableDirector>();
+            GameObject VolumeGameObject = GameObject.Find("Global Volume");
 
-            TimelineAnimationLancerPokeball.Stop();
-            TimelineCameraCombat.Stop();
+            GameObject personnageModel = new GameObject();
 
-            cameraCombat.SetActive(false);
+            if (DonneesChargement.dimensionPersonnage == "3D") // Si le personnage est en 3D, on charge un gameobject
+            {
+                personnageModel = Instantiate(Resources.Load<GameObject>(DonneesChargement.nomGameObjectJoueur), JoueurManager.JoueursGameObject[0].transform.GetChild(1).gameObject.transform); // Le personnage selectionné dans le menu apparait
+                JoueurManager.JoueursGameObject[0].transform.GetChild(1).gameObject.transform.GetChild(4).name = DonneesChargement.nomGameObjectModel; 
+                JoueurManager.JoueursGameObject[0].GetComponent<Animator>().avatar = personnageModel.GetComponent<Animator>().avatar; // Avatar du personnage
+                Destroy(personnageModel);
+                JoueurManager.JoueursGameObject[0].GetComponent<Animator>().Rebind();
+                personnageModel.transform.localScale = new Vector3(0.014f, 0.014f, 0.014f);
+            }
+            else if (DonneesChargement.dimensionPersonnage == "2D") // Si le personnage est un sprite, on charge un sprite 
+            {
+                // personnageModel = JoueurManager.JoueursGameObject[0].transform.GetChild(1).gameObject.transform.GetChild(4).gameObject;
+                VolumeGameObject.GetComponent<Volume>().profile = Resources.Load<VolumeProfile>("Profiles/HD 2D");
+                GameObject spriteGameObject = new GameObject("Sprite");
+                spriteGameObject.transform.parent = JoueurManager.JoueursGameObject[0].transform.GetChild(1).gameObject.transform.GetChild(4).gameObject.transform;
+                spriteGameObject.transform.localPosition = new Vector3(0, 41, 0);
+                // spriteGameObject.transform.localScale = new Vector3(8, 8, 1);
+                spriteGameObject.transform.localScale = new Vector3(210, 210, 1);
+                SpriteRenderer spriteRenderer = spriteGameObject.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = Resources.Load<Sprite>(DonneesChargement.nomGameObjectJoueur);
+                spriteRenderer.material = Resources.Load<Material>("Materials/HD 2D"); // On charge le bon material
+                spriteGameObject.AddComponent<ShadowedSprite>(); // On ajoute les ombres HD 2D
 
+                spriteGameObject.AddComponent<SpriteDeplacement3D>(); // On ajoute le script de changement des sprites
+
+                // On lock la caméra pour qu'elle suive bien le joueur
+                vThirdPersonCamera camera = controllerJoueurs[0].GetComponent<vThirdPersonCamera>();
+                camera.lockCamera = true;
+                camera.defaultDistance = 14;
+                camera.height = 3;
+            }
+
+            if(DonneesChargement.musiquePersonnage != null) // Si le personnage selectionné à une musique
+            {
+                AudioSource GameObjectMusiqueAudioSource = GameObjectMusique.GetComponent<AudioSource>();
+                GameObjectMusiqueAudioSource.clip = DonneesChargement.musiquePersonnage;
+                GameObjectMusiqueAudioSource.Play(); // On lance la musique
+            }
+
+            for (int i = personnageModel.transform.childCount; i>0; i--) // On enlève les enfants du gameobject puisqu'on a besoin d'eux pour le personnage
+            {
+                personnageModel.transform.GetChild(0).gameObject.transform.parent = JoueurManager.JoueursGameObject[0].transform.GetChild(1).gameObject.transform.GetChild(4).gameObject.transform;
+            }
+
+            GameObjectJoueur = GameObject.Find("vThirdPersonCamera").transform.GetChild(1).gameObject.transform.GetChild(4).gameObject;
+
+            this.destinationPokeball = GameObjectJoueur.transform.GetChild(0).gameObject.transform;
+
+            cameraMapGameObject.SetActive(false);
+
+            cameraCombatJoueurs[0].SetActive(false);
+
+            // Thread threadInitialisationPersonnage = new Thread(jeu.initialisationPersonnage);
+           // threadInitialisationPersonnage.Start();
+
+            /*
             // Construction de l'interface du menu des pokémon
             for (int i = 0; i < 6; i++)
             {
@@ -1786,6 +2108,7 @@ namespace ProjetP3DScene1
                 imagePokemonMenu[i].name = "ImagePokemon";
                 imagePokemonMenu[i].gameObject.transform.SetParent(menu.transform.GetChild(0).gameObject.transform.GetChild(i));
                 imagePokemonMenu[i].gameObject.transform.localPosition = new Vector3(-220, 0, 0);
+                imagePokemonMenu[i].gameObject.transform.localScale = new Vector3(2.3f, 2.3f, 2.3f);
                 imagePokemonMenuImage[i] = imagePokemonMenu[i].AddComponent<Image>();
 
               //  Button imagePokemonMenuButton = imagePokemonMenu[i].AddComponent<Button>();
@@ -1799,45 +2122,43 @@ namespace ProjetP3DScene1
                 int numeroPokemon = i + 1;
                 positionPokemonMenu[i] = i;
 
-                textNomPokemonMenu[i] = CreateText(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "NomPokemon" + numeroPokemon, 300, 100, 113, 0, "", 43, 0, 0, Color.black);
-                pvPokemonMenu[i] = CreateText(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "PvPokemon", 200, 100, 320, 0, "", 43, 0, 0, Color.black);
+                textNomPokemonMenu[i] = this.gameObject.GetComponent<CreerComposantScript>().CreateText(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "NomPokemon" + numeroPokemon, 300, 100, 113, 0, "", 43, 0, 0, Color.black);
+                pvPokemonMenu[i] = this.gameObject.GetComponent<CreerComposantScript>().CreateText(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "PvPokemon", 200, 100, 320, 0, "", 43, 0, 0, Color.black);
                 pvPokemonMenuTexte[i] = pvPokemonMenu[i].GetComponent<Text>();
-                textNomPokemonMenuBouton[i] = textNomPokemonMenu[i].AddComponent<Button>();
                 //  textNomPokemonMenuBouton[i].onClick.AddListener(() => { btn_ouvrir_menu_statistiques_click(positionPokemonMenu[numeroPokemon - 1]); });
-                textNomPokemonMenuBouton[i].onClick.AddListener(() => { btn_ouvrir_menu_options_pokemon_click(positionPokemonMenu[numeroPokemon - 1]); });
 
-                boutonStatistiquesPokemonMenu[i] = CreateButton(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "BoutonStatisiques", 220, 90, "Statistiques", 38);
+                boutonStatistiquesPokemonMenu[i] = this.gameObject.GetComponent<CreerComposantScript>().CreateButton(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "BoutonStatisiques", 220, 90, "Statistiques", 38);
                 boutonStatistiquesPokemonMenu[i].SetActive(false);
                 boutonStatistiquesPokemonMenuBouton[i] = boutonStatistiquesPokemonMenu[i].GetComponent<Button>();
-
-                boutonChoisirPokemonMenu[i] = CreateButton(menu.transform.GetChild(0).gameObject.transform.GetChild(i), "BoutonChoixPokemon", 220, 90, "Choisir", 38, 500, 0);
-                boutonChoisirPokemonMenu[i].SetActive(false);
-                boutonChoisirPokemonMenuBouton[i] = boutonChoisirPokemonMenu[i].GetComponent<Button>();
-                boutonChoisirPokemonMenuBouton[i].onClick.AddListener(() => { changementPokemon_click(positionPokemonMenu[numeroPokemon - 1]); });
-
+                
+             
                 pokemonMenu[i] = menu.transform.GetChild(0).gameObject.transform.GetChild(i).gameObject;
                 pokemonMenu[i].SetActive(false);
-
+            
                 // boutonStatistiquesPokemonMenuBouton[i].onClick.AddListener(() => { btn_all_objets_click(boutonStatistiquesPokemonMenuBouton[i]); });
             }
-
-            LabelPvChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(0).gameObject.GetComponent<Text>();
-            LabelAttaqueChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(1).gameObject.GetComponent<Text>();
-            LabelDefenseChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(2).gameObject.GetComponent<Text>();
-            LabelVitesseChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(3).gameObject.GetComponent<Text>();
-            LabelAttaqueSpecialeChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(4).gameObject.GetComponent<Text>();
-            LabelDefenseSpecialeChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(5).gameObject.GetComponent<Text>();
+            */
+            // LabelPvChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(0).gameObject.GetComponent<Text>();
+            // LabelAttaqueChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(1).gameObject.GetComponent<Text>();
+            // LabelDefenseChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(2).gameObject.GetComponent<Text>();
+            //  LabelVitesseChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(3).gameObject.GetComponent<Text>();
+            //  LabelAttaqueSpecialeChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(4).gameObject.GetComponent<Text>();
+            //  LabelDefenseSpecialeChangementNiveau = StatistiquesChangementNiveau.transform.GetChild(5).gameObject.GetComponent<Text>();
 
             ObjetProcheGameObject = GameObject.Find("Canvas").transform.GetChild(2).gameObject;
             LabelObjetProche = ObjetProcheGameObject.GetComponent<Text>();
 
-            Chemin = new DirectoryInfo("Assets/Resources/Musics");
-            FichiersMusiqueCombat = Chemin.GetFiles("*.mp3");
+            MusiquesCombat.Add(Resources.Load<AudioClip>("Musics/Combat/" + "normal-battle-pokemon-colosseum")); // Ajout des musiques de combats
+            MusiquesCombat.Add(Resources.Load<AudioClip>("Musics/Combat/" + "Pokemon RedBlueYellow - Battle! Trainer Music (HQ)"));
 
             // BoiteDialogue.transform.GetChild(2).gameObject.GetComponent<Button>().onClick.AddListener(() => DialogueManagerGameObject.GetComponent<DialogueManager>().DisplayNextSentence(DialogueManagerGameObject.GetComponent<DialogueTrigger>().getDialogue()));
 
-            Joueur.setObjetsSacOffline(jeu);
+            JoueurManager.Joueurs[0].setObjetsSacOffline(jeu);
 
+            if (Gamepad.all.Count > 0)
+            {
+                JoueurManager.JoueursGameObject[0].GetComponent<PlayerInput>().SwitchCurrentControlScheme("Keyboard and Gamepad 1", new InputDevice[] { Keyboard.current, Mouse.current, Gamepad.all[0] }); // Permet au joueur 1 de controller le clavier, la souris et la première manette
+            }
 
             /*
             try
@@ -1852,16 +2173,17 @@ namespace ProjetP3DScene1
             }
             */
 
-           // int idPokedexImage = Joueur.getPokemonEquipe()[0].getNoIdPokedex();
+            // int idPokedexImage = Joueur.getPokemonEquipe()[0].getNoIdPokedex();
 
-           // GameObject spawnPokemonGameObject = GameObject.Find("SpawnPokemon");
-           // GameObject pokemonSelectionnerGameObject = (GameObject)Instantiate(Resources.Load("Models/Pokemon/" + idPokedexImage), spawnPokemonGameObject.transform.position, spawnPokemonGameObject.transform.rotation);
-         
+            // GameObject spawnPokemonGameObject = GameObject.Find("SpawnPokemon");
+            // GameObject pokemonSelectionnerGameObject = (GameObject)Instantiate(Resources.Load("Models/Pokemon/" + idPokedexImage), spawnPokemonGameObject.transform.position, spawnPokemonGameObject.transform.rotation);
+
         }
 
         // Update is called once per frame
         void Update()
         {
+            /*
             // Met le jeu en pause si le jeu n'est pas en cours de combat, si le jeu est déjà en pause, cela permet de reprendre la partie
             if (Input.GetKeyDown("i") && EnCombat == false)
             {
@@ -1879,8 +2201,10 @@ namespace ProjetP3DScene1
                         jeuEnPause = false;
                     }
                 }
-            }
+            } 
+            */
 
+            /*
             float DistanceBoitePCJoueur = (BoitePC.transform.position - GameObjectJoueur.transform.position).sqrMagnitude;
 
             // Permet d'afficher un message quand le joueur se retrouve proche des starters ou de la boîte et d'intéragir
@@ -1976,7 +2300,8 @@ namespace ProjetP3DScene1
                 ObjetProcheGameObject.SetActive(true);
                 messageBoitePCActif = true;
             }          
-
+            */
+            /*
             if (DistanceBoitePCJoueur < 3.0f  && ObjetProcheGameObject.activeSelf == true && messageBoitePCActif == true && Input.GetKeyDown(KeyCode.Return))
             {
                 OuverturePC = true;
@@ -2027,11 +2352,12 @@ namespace ProjetP3DScene1
 
                                             pictureBoxCurseurChoixPokemon.Location = new System.Drawing.Point(68, 9);
                                         */
-                    }
-                }
-                menuPC.SetActive(true);
-            } 
-            
+            /*
+}
+}
+menuPC.SetActive(true);
+} */
+
 
             if (Input.GetKeyDown("c"))
             {
@@ -2040,7 +2366,7 @@ namespace ProjetP3DScene1
                 Animator animatorPokeball = pokeball.GetComponent<Animator>();
                 SignalReceiver signalPokeball = pokeball.GetComponent<SignalReceiver>();
 
-                int idPokedex = pokemonJoueurSelectionner.getNoIdPokedex();
+                int idPokedex = JoueurManager.Joueurs[0].pokemonSelectionner.getNoIdPokedex();
                 pokeball.GetComponent<AfterThrowingPokeball>().NumeroPokedexPokemon = idPokedex;
 
                 animator.Play("Throw pokeball");
@@ -2062,25 +2388,25 @@ namespace ProjetP3DScene1
                 GameObject pokemonSelectionnerGameObject = (GameObject)Instantiate(Resources.Load("Models/Pokemon/" + idPokedexImage), spawnPokemonGameObject.transform.position, spawnPokemonGameObject.transform.rotation);
                 */
             }
-
+            /*
             if (Input.GetKeyDown("y"))
             {
                 Vector3 destinationPositionPokeball = new Vector3(destinationPokeball.position.x, destinationPokeball.position.y, destinationPokeball.position.z - 0.5f);
                 GameObject pokeball = Instantiate(pokeballInstance, destinationPositionPokeball, destinationPokeball.rotation);
                 Animator animatorPokeball = pokeball.GetComponent<Animator>();
 
-                int idPokedex = pokemonJoueurSelectionner.getNoIdPokedex();
+                int idPokedex = JoueurManager.Joueurs[0].pokemonSelectionner.getNoIdPokedex();
                 animatorPokeball.SetInteger("NumeroPokedexPokemon", idPokedex);
 
                 animator.SetTrigger("trThrowBall");
                 animator.Play("Red throw pokeball");
                 animatorPokeball.Play("Ball throw");
             }
-
+            */
             if (Input.GetKeyDown("n"))
             {
                 // Déclenchement d'un combat
-                DeclenchementCombat();
+                DeclenchementCombat(0);
             }
             /*
             if (Input.GetKeyDown(KeyCode.Space))
@@ -2098,11 +2424,192 @@ namespace ProjetP3DScene1
             }
         }
 
+        private void tourCombatPokemon()
+        {
+            StartCoroutine("tourCombatPokemonStart");
+        }
+
+        IEnumerator rafraichirApresSoinPokemonJoueur()
+        {
+            coroutineBarreVieJoueurLancer = true;
+            while (coroutineBarreVieJoueurLancer == true)
+            {
+                timerBarrePokemonJoueurReecriture(JoueurManager.Joueurs[0].pokemonSelectionner, barViePokemonJoueurImage, LabelPvPokemonJoueurUI, ref compteur, gagnePvPokemonJoueur, "PokemonJoueur");
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            coroutineBarreVieJoueurLancer = true;
+            rafraichirBarreViePokemonJoueur();
+
+            while (coroutineBarreVieJoueurLancer == true)
+            {
+                timerBarrePokemonJoueurReecriture(JoueurManager.Joueurs[0].pokemonSelectionner, barViePokemonJoueurImage, LabelPvPokemonJoueurUI, ref compteur, gagnePvPokemonJoueur, "PokemonJoueur");
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            activerMenuCombatApresTour();
+        }
+
+        IEnumerator tourCapturePokemon()
+        {
+            coroutineBarreVieAdversaireLancer = true;
+
+            while (coroutineBarreVieAdversaireLancer == true)
+            {
+                timerAnimationCapture();
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            if (nombreMouvementsBall < 4)
+            {
+                coroutineBarreVieJoueurLancer = true;
+                rafraichirBarreViePokemonJoueur();
+
+                while (coroutineBarreVieJoueurLancer == true)
+                {
+                    timerBarrePokemonJoueurReecriture(JoueurManager.Joueurs[0].pokemonSelectionner, barViePokemonJoueurImage, LabelPvPokemonJoueurUI, ref compteur, gagnePvPokemonJoueur, "PokemonJoueur");
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+            else
+            {
+                yield return new WaitForSeconds(8f);
+
+                scroll_objets.SetActive(false);
+                btn_fuite_click(0);
+            }
+
+            if (nombreMouvementsBall >= 0)
+            {
+                nombreMouvementsBall = -1;
+            }
+        }
+
+
+        IEnumerator tourCombatPokemonStartTourContrePokemonJoueurEnPremier()
+        {
+            rafraichirBarreViePokemonJoueur();
+            this.gameObject.GetComponent<AttaqueMouvementCombatScript>().GoToNextPNJ(pokemonAdverseGameObject, pokemonJoueurGameObject);
+            coroutineBarreVieJoueurLancer = true;
+            //  while (coroutineBarreVieJoueurLancer == true)
+            //  {
+
+            //   yield return new WaitUntil(() => this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationAttaqueFiniContrePokemonAdversairePremierePartie == true);
+
+            while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "PremierDeplacement")
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            GameObject textDegats3D = this.gameObject.GetComponent<CreerComposantScript>().CreateText3D(pokemonJoueurGameObject.transform, "NbDegats", 250, 250, 0, 1, nbDegats.ToString(), 12, Color.green, cameraCombat);
+            Destroy(textDegats3D, 5);
+
+            while (coroutineBarreVieJoueurLancer == true)
+                { 
+                    timerBarrePokemonJoueurReecriture(JoueurManager.Joueurs[0].pokemonSelectionner, barViePokemonJoueurImage, LabelPvPokemonJoueurUI, ref compteur, gagnePvPokemonJoueur, "PokemonJoueur");
+                    //  timerBarrePokemonJoueurReecriture(pokemon, barViePokemonAdversaireImage, LabelPvPokemonAdversaireUI, ref compteurAdversaire, gagnePvPokemonJoueur);
+                    yield return new WaitForSeconds(0.1f);
+                }
+
+            while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "RevientPositionInitiale")
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            yield return new WaitForSeconds(1);
+
+            rafraichirBarreViePokemonAdversaire();
+            coroutineBarreVieAdversaireLancer = true;
+            this.gameObject.GetComponent<AttaqueMouvementCombatScript>().GoToNextPNJ(pokemonJoueurGameObject, pokemonAdverseGameObject);
+
+            while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "PremierDeplacement")
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            GameObject textDegats3DAdversaire = this.gameObject.GetComponent<CreerComposantScript>().CreateText3D(pokemonAdverseGameObject.transform, "NbDegats", 250, 250, 0, 1, nbDegatsContreAdversaire.ToString(), 12, Color.green, cameraCombat);
+            Destroy(textDegats3DAdversaire, 5);
+
+            while (coroutineBarreVieAdversaireLancer == true)
+            {
+                timerBarrePokemonJoueurReecriture(pokemon, barViePokemonAdversaireImage, LabelPvPokemonAdversaireUI, ref compteurAdversaire, gagnePvPokemonJoueur, "PokemonAdversaire");
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "RevientPositionInitiale")
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            activerMenuCombatApresTour();
+        }
+
+        IEnumerator tourCombatPokemonStartTourContrePokemonAdversaireEnPremier()
+        {
+            rafraichirBarreViePokemonAdversaire();
+            this.gameObject.GetComponent<AttaqueMouvementCombatScript>().GoToNextPNJ(pokemonJoueurGameObject, pokemonAdverseGameObject);
+            coroutineBarreVieAdversaireLancer = true;
+            //  while (coroutineBarreVieJoueurLancer == true)
+            //  {
+            while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "PremierDeplacement")
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            GameObject textDegats3DAdversaire = this.gameObject.GetComponent<CreerComposantScript>().CreateText3D(pokemonAdverseGameObject.transform, "NbDegats", 250, 250, 0, 1, nbDegatsContreAdversaire.ToString(), 12, Color.green, cameraCombat);
+            Destroy(textDegats3DAdversaire, 5);
+
+            while (coroutineBarreVieAdversaireLancer == true)
+            {
+                timerBarrePokemonJoueurReecriture(pokemon, barViePokemonAdversaireImage, LabelPvPokemonAdversaireUI, ref compteurAdversaire, gagnePvPokemonJoueur, "PokemonAdversaire");
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "RevientPositionInitiale")
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            yield return new WaitForSeconds(1);
+
+            if (pokemon.getPvRestant() > 0)
+            {
+
+                rafraichirBarreViePokemonJoueur();
+                this.gameObject.GetComponent<AttaqueMouvementCombatScript>().GoToNextPNJ(pokemonAdverseGameObject, pokemonJoueurGameObject);
+                coroutineBarreVieJoueurLancer = true;
+
+                while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "PremierDeplacement")
+                {
+                    yield return new WaitForSeconds(0.1f);
+                }
+
+                GameObject textDegats3D = this.gameObject.GetComponent<CreerComposantScript>().CreateText3D(pokemonJoueurGameObject.transform, "NbDegats", 250, 250, 0, 1, nbDegats.ToString(), 12, Color.green, cameraCombat);
+                Destroy(textDegats3D, 5);
+
+                while (coroutineBarreVieJoueurLancer == true)
+                {
+                    timerBarrePokemonJoueurReecriture(JoueurManager.Joueurs[0].pokemonSelectionner, barViePokemonJoueurImage, LabelPvPokemonJoueurUI, ref compteur, gagnePvPokemonJoueur, "PokemonJoueur");
+                    yield return new WaitForSeconds(0.1f);
+                }
+
+                while (this.gameObject.GetComponent<AttaqueMouvementCombatScript>().animationStatutAttaqueContrePokemonAdversaire == "RevientPositionInitiale")
+                {
+                    yield return new WaitForSeconds(0.1f);
+                }
+
+                activerMenuCombatApresTour();
+            }
+        }
+
         IEnumerator timerBarreJoueurStart()
         {
+            coroutineBarreVieJoueurLancer = true;
+
             while (true)
             {
-                timerBarrePokemonJoueur();
+                timerBarrePokemonJoueurReecriture(JoueurManager.Joueurs[0].pokemonSelectionner, barViePokemonJoueurImage, LabelPvPokemonJoueurUI, ref compteur, gagnePvPokemonJoueur, "PokemonJoueur");
+              //  timerBarrePokemonJoueurReecriture(pokemon, barViePokemonAdversaireImage, LabelPvPokemonAdversaireUI, ref compteurAdversaire, gagnePvPokemonJoueur);
                 yield return new WaitForSeconds(0.1f);
             }
         }
@@ -2111,7 +2618,8 @@ namespace ProjetP3DScene1
         {
             while (true)
             {
-                timerBarrePokemonAdversaire();
+                timerBarrePokemonJoueurReecriture(pokemon, barViePokemonAdversaireImage, LabelPvPokemonAdversaireUI, ref compteurAdversaire, gagnePvPokemonJoueur, "PokemonAdversaire");
+                // timerBarrePokemonAdversaire();
                 yield return new WaitForSeconds(0.1f);
             }
         }
@@ -2126,7 +2634,7 @@ namespace ProjetP3DScene1
             StopCoroutine("showStatistiquesStart");
         }
 
-        IEnumerator WaitBeforeMessageDisapear()
+       public IEnumerator WaitBeforeMessageDisapear()
         {
             yield return new WaitForSeconds(5);  
             ObjetProcheGameObject.SetActive(false);
@@ -2139,12 +2647,12 @@ namespace ProjetP3DScene1
                 showStatistiquesAugmenter = false;
                 showStatistiquesNiveauSuivant = true;
 
-                LabelPvChangementNiveau.text = "PV :                           " + pokemonJoueurSelectionner.getPv();
-                LabelAttaqueChangementNiveau.text = "Attaque :                   " + pokemonJoueurSelectionner.getStatistiquesAttaque();
-                LabelDefenseChangementNiveau.text = "Défense :                  " + pokemonJoueurSelectionner.getStatistiquesDefense();
-                LabelVitesseChangementNiveau.text = "Vitesse :                   " + pokemonJoueurSelectionner.getStatistiquesVitesse();
-                LabelAttaqueSpecialeChangementNiveau.text = "Attaque Spéciale :    " + pokemonJoueurSelectionner.getStatistiquesAttaqueSpeciale();
-                LabelDefenseSpecialeChangementNiveau.text = "Défense Spéciale :   " + pokemonJoueurSelectionner.getStatistiquesDefenseSpeciale();
+                LabelPvChangementNiveau.text = "PV :                           " + JoueurManager.Joueurs[0].pokemonSelectionner.getPv();
+                LabelAttaqueChangementNiveau.text = "Attaque :                   " + JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesAttaque();
+                LabelDefenseChangementNiveau.text = "Défense :                  " + JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesDefense();
+                LabelVitesseChangementNiveau.text = "Vitesse :                   " + JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse();
+                LabelAttaqueSpecialeChangementNiveau.text = "Attaque Spéciale :    " + JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesAttaqueSpeciale();
+                LabelDefenseSpecialeChangementNiveau.text = "Défense Spéciale :   " + JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesDefenseSpeciale();
             }
 
             else if(showStatistiquesAugmenter == false && showStatistiquesNiveauSuivant == true && Input.GetKeyDown("j"))
@@ -2172,7 +2680,7 @@ namespace ProjetP3DScene1
             {               
                     LabelPvPokemonAdversaireUI.text = "Attrapé";
 
-                    string pokemonEnvoi = Joueur.attraperPokemon(pokemon);
+                    string pokemonEnvoi = JoueurManager.Joueurs[0].attraperPokemon(pokemon);
 
                     dialogueCombat.getDialogue().AddSentence("Et hop ! " + pokemon.getNom() + " est attrapé !");
                     StartCoroutine(DialogueCombat());
@@ -2200,7 +2708,7 @@ namespace ProjetP3DScene1
                         // pokemon.setPvRestant(0);
                         // rafraichirBarreViePokemonAdversaire1();
 
-                        int idPokedexImage = Joueur.getPokemonEquipe()[Joueur.getPokemonEquipe().Count - 1].getNoIdPokedex();                    
+                        int idPokedexImage = JoueurManager.Joueurs[0].getPokemonEquipe()[JoueurManager.Joueurs[0].getPokemonEquipe().Count - 1].getNoIdPokedex();                    
                     }
                     else // Sinon il sera envoyé dans le pc
                     {
@@ -2214,7 +2722,7 @@ namespace ProjetP3DScene1
                     compteurAnimationCapturePartie3 = 0;
                     compteurAnimationCapturePartie4 = 0;
                     compteurAnimationCapturePartie5 = 0; */
-                    nombreMouvementsBall = 0;
+                   // nombreMouvementsBall = 0;
                     nombreTourStatutAdversaire = 0;
                     nombreTourSommeilAdversaire = 0;
                     nombreTourStatutAEffectuerAdversaire = 0;
@@ -2245,43 +2753,44 @@ namespace ProjetP3DScene1
                         dialogueCombat.getDialogue().AddSentence("Mince ! ça y était presque !");
                       //  StartCoroutine(DialogueCombat());
                     }
-                    rafraichirBarreViePokemonJoueur();
+                   // rafraichirBarreViePokemonJoueur();
             }
+            coroutineBarreVieAdversaireLancer = false;
         }
 
         /// <summary>
         /// Cette méthode gère la barre d'expérience du pokémon en combat
         private void timerBarreExperiencePokemonJoueur()
         {
-            int pourcentageBarreExperience = (100 * (pokemonJoueurSelectionner.getExperience() - pokemonJoueurSelectionner.getExperiencePokemonReturn())) / (pokemonJoueurSelectionner.getExperiencePokemonProchainNiveau() - pokemonJoueurSelectionner.getExperiencePokemonReturn());
+            int pourcentageBarreExperience = (100 * (JoueurManager.Joueurs[0].pokemonSelectionner.getExperience() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn())) / (JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonProchainNiveau() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn());
 
             if (compteurExperience <= pourcentageBarreExperience)
             {
 
-                barExperiencePokemonJoueurImage.fillAmount = (float)(((100 * (pokemonJoueurSelectionner.getExperience() - pokemonJoueurSelectionner.getExperiencePokemonReturn())) / (pokemonJoueurSelectionner.getExperiencePokemonProchainNiveau() - pokemonJoueurSelectionner.getExperiencePokemonReturn())) - (pourcentageBarreExperience - compteurExperience)) / 100;
+                barExperiencePokemonJoueurImage.fillAmount = (float)(((100 * (JoueurManager.Joueurs[0].pokemonSelectionner.getExperience() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn())) / (JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonProchainNiveau() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn())) - (pourcentageBarreExperience - compteurExperience)) / 100;
 
-                compteurExperience += (pokemonJoueurSelectionner.getExperiencePokemonProchainNiveau() - pokemonJoueurSelectionner.getExperiencePokemonReturn()) / (pokemonJoueurSelectionner.getExperiencePokemonProchainNiveau() - pokemonJoueurSelectionner.getExperiencePokemonReturn());
+                compteurExperience += (JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonProchainNiveau() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn()) / (JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonProchainNiveau() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn());
 
                 // Si le pourcentage d'expérience est supérieur à 100, la taille de la barre, alors cela veut dire que le pokémon à gagné un niveau ainsi que des statistiques en plus
                 if (compteurExperience >= 100)
                 {
                     compteurExperience = 0;
 
-                    int nbViePokemonAvant = pokemonJoueurSelectionner.getPv();
-                    int statistiquesAttaquePokemonAvant = pokemonJoueurSelectionner.getStatistiquesAttaque();
-                    int statistiquesDefensePokemonAvant = pokemonJoueurSelectionner.getStatistiquesDefense();
-                    int statistiquesVitessePokemonAvant = pokemonJoueurSelectionner.getStatistiquesVitesse();
-                    int statistiquesAttaqueSpecialePokemonAvant = pokemonJoueurSelectionner.getStatistiquesAttaqueSpeciale();
-                    int statistiquesDefenseSpecialePokemonAvant = pokemonJoueurSelectionner.getStatistiquesDefenseSpeciale();
+                    int nbViePokemonAvant = JoueurManager.Joueurs[0].pokemonSelectionner.getPv();
+                    int statistiquesAttaquePokemonAvant = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesAttaque();
+                    int statistiquesDefensePokemonAvant = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesDefense();
+                    int statistiquesVitessePokemonAvant = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse();
+                    int statistiquesAttaqueSpecialePokemonAvant = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesAttaqueSpeciale();
+                    int statistiquesDefenseSpecialePokemonAvant = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesDefenseSpeciale();
 
-                    pokemonJoueurSelectionner.setNiveau(pokemonJoueurSelectionner.getNiveau() + 1);
+                    JoueurManager.Joueurs[0].pokemonSelectionner.setNiveau(JoueurManager.Joueurs[0].pokemonSelectionner.getNiveau() + 1);
 
-                    int nbviePokemonApres = pokemonJoueurSelectionner.getPv();
-                    int statistiquesAttaquePokemonApres = pokemonJoueurSelectionner.getStatistiquesAttaque();
-                    int statistiquesDefensePokemonApres = pokemonJoueurSelectionner.getStatistiquesDefense();
-                    int statistiquesVitessePokemonApres = pokemonJoueurSelectionner.getStatistiquesVitesse();
-                    int statistiquesAttaqueSpecialePokemonApres = pokemonJoueurSelectionner.getStatistiquesAttaqueSpeciale();
-                    int statistiquesDefenseSpecialePokemonApres = pokemonJoueurSelectionner.getStatistiquesDefenseSpeciale();
+                    int nbviePokemonApres = JoueurManager.Joueurs[0].pokemonSelectionner.getPv();
+                    int statistiquesAttaquePokemonApres = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesAttaque();
+                    int statistiquesDefensePokemonApres = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesDefense();
+                    int statistiquesVitessePokemonApres = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesVitesse();
+                    int statistiquesAttaqueSpecialePokemonApres = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesAttaqueSpeciale();
+                    int statistiquesDefenseSpecialePokemonApres = JoueurManager.Joueurs[0].pokemonSelectionner.getStatistiquesDefenseSpeciale();
 
                     int nbPvGagner = nbviePokemonApres - nbViePokemonAvant;
                     int statistiquesAttaqueGagner = statistiquesAttaquePokemonApres - statistiquesAttaquePokemonAvant;
@@ -2290,8 +2799,8 @@ namespace ProjetP3DScene1
                     int statistiquesAttaqueSpecialeGagner = statistiquesAttaqueSpecialePokemonApres - statistiquesAttaqueSpecialePokemonAvant;
                     int statistiquesDefenseSpecialeGagner = statistiquesDefenseSpecialePokemonApres - statistiquesDefenseSpecialePokemonAvant;
 
-                    pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() + nbPvGagner);
-                    LabelNiveauPokemonJoueurUI.text = "N. " + pokemonJoueurSelectionner.getNiveau();
+                    JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() + nbPvGagner);
+                    LabelNiveauPokemonJoueurUI.text = "N. " + JoueurManager.Joueurs[0].pokemonSelectionner.getNiveau();
 
                     LabelPvChangementNiveau.text = "PV :                           + " + nbPvGagner;
                     LabelAttaqueChangementNiveau.text = "Attaque :                   + " + statistiquesAttaqueGagner;
@@ -2300,16 +2809,16 @@ namespace ProjetP3DScene1
                     LabelAttaqueSpecialeChangementNiveau.text = "Attaque Spéciale :    + " + statistiquesAttaqueSpecialeGagner;
                     LabelDefenseSpecialeChangementNiveau.text = "Défense Spéciale :   + " + statistiquesDefenseSpecialeGagner;
 
-                    for (int i = 0; i <= Joueur.getPokemonEquipe().Count - 1; i++)
+                    for (int i = 0; i <= JoueurManager.Joueurs[0].getPokemonEquipe().Count - 1; i++)
                     {
-                        if (pokemonJoueurSelectionner == Joueur.getPokemonEquipe()[i])
+                        if (JoueurManager.Joueurs[0].pokemonSelectionner == JoueurManager.Joueurs[0].getPokemonEquipe()[i])
                         {
                           //  label_pv_pokemon[i].Text = pokemonJoueurSelectionner.getPvRestant().ToString() + " / " + pokemonJoueurSelectionner.getPv().ToString() + " PV";
                         }
                     }
-                    LabelPvPokemonJoueurUI.text = pokemonJoueurSelectionner.getPvRestant().ToString() + " / " + pokemonJoueurSelectionner.getPv().ToString() + " PV";
+                    LabelPvPokemonJoueurUI.text = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant().ToString() + " / " + JoueurManager.Joueurs[0].pokemonSelectionner.getPv().ToString() + " PV";
 
-                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " passe au niveau " + pokemonJoueurSelectionner.getNiveau());
+                    dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " passe au niveau " + JoueurManager.Joueurs[0].pokemonSelectionner.getNiveau());
                     StartCoroutine(DialogueCombat());
                     //  rafraichirBarreViePokemonJoueur1();
 
@@ -2323,14 +2832,15 @@ namespace ProjetP3DScene1
             else
             {
                 StopCoroutine("timerBarreExperienceStart");
-            //    timerBarreExperiencePokemonJoueur.Stop();
+                btn_fuite_click(0);
+                //    timerBarreExperiencePokemonJoueur.Stop();
 
-              //  if (groupBoxNiveauSuperieurStatistiques.Visible == false)
-               // {
-                 //   combat_btn.Enabled = true;
+                //  if (groupBoxNiveauSuperieurStatistiques.Visible == false)
+                // {
+                //   combat_btn.Enabled = true;
 
-                  //  combat_btn.Focus();
-               // }
+                //  combat_btn.Focus();
+                // }
             }
 
             // gBarreExperience.Dispose();
@@ -2339,42 +2849,283 @@ namespace ProjetP3DScene1
 
         }
 
+        private void timerBarrePokemonJoueurReecriture(ClassLibrary.Pokemon pokemonSelectionner, Image barViePokemon, Text LabelPVPokemonUI, ref int compteurPv, bool gagnePvPokemon, string tourContrePokemonJoueurouAdversaire)
+        {
+            if (compteurPv >= pokemonSelectionner.getPvRestant() && compteurPv >= 0 && compteurPv <= pokemonSelectionner.getPv() && gagnePvPokemon == false || compteurPv <= pokemonSelectionner.getPvRestant() && compteurPv <= pokemonSelectionner.getPv() && gagnePvPokemon == true)
+            {
+                // Pv entre toute la barre et 1/5
+                if (compteurPv >= pokemonSelectionner.getPv() / 2)
+                {
+                    barViePokemon.color = new Color32(81, 209, 39, 255);
+                    barViePokemon.fillAmount = (float)(pokemonSelectionner.getPv() - (pokemonSelectionner.getPv() - compteurPv)) / pokemonSelectionner.getPv() + 0.01f;
+                    LabelPVPokemonUI.text = compteurPv + " / " + pokemonSelectionner.getPv() + " PV";
+
+                }
+                else if (compteurPv < pokemonSelectionner.getPv() / 2 && compteurPv >= pokemonSelectionner.getPv() / 5)
+                {
+                    barViePokemon.color = Color.yellow;
+                    barViePokemon.fillAmount = (float)(pokemonSelectionner.getPv() - (pokemonSelectionner.getPv() - compteurPv)) / pokemonSelectionner.getPv();
+                    LabelPVPokemonUI.text = compteurPv + " / " + pokemonSelectionner.getPv() + " PV";
+                }
+                else if (compteurPv < pokemonSelectionner.getPv() / 5 && compteurPv > 0)
+                {
+                    barViePokemon.color = Color.red;
+                    barViePokemon.fillAmount = (float)(pokemonSelectionner.getPv() - (pokemonSelectionner.getPv() - compteurPv)) / pokemonSelectionner.getPv();
+                    LabelPVPokemonUI.text = compteurPv + " / " + pokemonSelectionner.getPv() + " PV";
+                }
+
+                // Pv entre 0 et 1/5
+                else
+                {
+                    if (pokemonSelectionner.getPv() - (pokemonSelectionner.getPv() - compteurPv) > 0)
+                    {
+                        barViePokemon.fillAmount = (float)(pokemonSelectionner.getPv() - (pokemonSelectionner.getPv() - compteurPv)) / pokemonSelectionner.getPv();
+                        LabelPVPokemonUI.text = compteur + " / " + pokemonSelectionner.getPv() + " PV";
+                    }
+                    else
+                    {
+                        barViePokemon.fillAmount = 0f;
+                        LabelPVPokemonUI.text = "K.O.";
+
+                        dialogueCombat.getDialogue().AddSentence(pokemonSelectionner.getNom() + " est K.O.");
+                        StartCoroutine(DialogueCombat());
+
+                        if (pokemon.getPvRestant() <= 0 && tourContrePokemonJoueurouAdversaire == "PokemonAdversaire")
+                        {
+                            rafraichirBarreExperiencePokemonJoueur();
+                        }
+                    }
+                }
+
+                if (gagnePvPokemon == false)
+                {
+                    compteurPv--;
+                }
+                else if (gagnePvPokemon == true)
+                {
+                    compteurPv++;
+                }
+
+            }
+            else
+            {
+                if (tourContrePokemonJoueurouAdversaire == "PokemonJoueur")
+                {
+                    if (gagnePvPokemonJoueur == true)
+                    {
+                        compteur = pokemonSelectionner.getPvRestant();
+                        gagnePvPokemonJoueur = false;
+                    }
+
+                    coroutineBarreVieJoueurLancer = false;
+                }
+                else if(tourContrePokemonJoueurouAdversaire == "PokemonAdversaire")
+                {
+                    coroutineBarreVieAdversaireLancer = false;
+                }
+            }
+
+            if (gagnePvPokemonJoueur == true)
+            {
+               // compteur = pokemonJoueurSelectionner.getPvRestant();
+               // gagnePvPokemonJoueur = false;
+
+             //  rafraichirBarreViePokemonJoueur();
+              //  StartCoroutine("rafraichirApresSoinPokemonJoueur");
+            }
+
+            /*
+            if (statutPokemonPerdPvJoueur != 2)
+            {
+                if (pokemon.getPvRestant() > 0 && (pokemon.getStatutPokemon() != "Paralysie" && pokemon.getStatutPokemon() != "Gelé" && pokemon.getStatutPokemon() != "Sommeil") || (pokemon.getStatutPokemon() == "Paralysie" && reussiteAttaqueParalyseAdversaire == true) || (pokemon.getStatutPokemon() == "Gelé" && reussiteAttaqueGelAdversaire == true))
+                {
+                    dialogueCombat.getDialogue().AddSentence(pokemon.getNom() + " adverse a fait " + nbDegats + " dégâts ");
+                    StartCoroutine(DialogueCombat());
+                }
+
+            }
+            else
+            {
+                if (pokemonSelectionner.getStatutPokemon() == "Brulure")
+                {
+                    nbDegats = pokemonJoueurSelectionner.getPv() / 16;
+                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " brule");
+                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " perd " + nbDegats + " pv");
+                    StartCoroutine(DialogueCombat());
+                }
+                else if (pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                {
+                    nbDegats = pokemonJoueurSelectionner.getPv() / 8;
+                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " souffre du poison");
+                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " perd " + nbDegats + " pv");
+                    StartCoroutine(DialogueCombat());
+                }
+                else if (pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                {
+                    nbDegats = (pokemonJoueurSelectionner.getPv() / 16) * (nombreTourStatut - 1);
+                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " souffre du poison");
+                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " perd " + nbDegats + " pv");
+                    StartCoroutine(DialogueCombat());
+                }
+            }
+
+            if (gagnePvPokemon == true)
+            {
+                compteurPv = pokemonSelectionner.getPvRestant();
+                gagnePvPokemon = false;
+
+                rafraichirBarreViePokemonJoueur();
+            }
+
+            else if (pokemonJoueurAttaquePremier == false && nombreMouvementsBall < 0 && pokemonSelectionner.getPvRestant() > 0 && changement_pokemon == false && statutPokemonPerdPvJoueur == 0)
+            {
+                rafraichirBarreViePokemonAdversaire();
+            }
+
+            if (pokemonJoueurAttaquePremier == false && pokemon.getPvRestant() <= 0)
+            {
+
+            }
+            else if ((pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0 && statutPokemonPerdPvAdversaire == 0 && pokemonSelectionner.getPvRestant() > 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil")) || (pokemonJoueurAttaquePremier == false && nombreMouvementsBall >= 0 && nombreMouvementsBall < 4 && pokemonSelectionner.getPvRestant() > 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil")))
+            {
+                try
+                {
+                    //   Bitmap pngMenuCombat = new Bitmap(AppDomain.CurrentDomain.BaseDirectory + "\\Images\\Combat\\menu_combat.png");
+                    //   pictureBoxMenuCombat.Image = pngMenuCombat;
+                }
+                catch
+                {
+                    //   MessageBox.Show("L'image du menu de combat n'a pas pu être chargée. Veuillez vérifier que celle-ci est bien présente dans le répertoire.", "Vérification du menu de combat", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                boutons_combat.SetActive(true);
+                boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();
+            }
+
+            else if (pokemon.getPvRestant() > 0 && pokemonSelectionner.getPvRestant() <= 0)
+            {
+                // timerAnimationKo.Start();
+
+                bool equipePokemonEncoreEnVie = false;
+
+                for (int i = 0; i < Joueur.getPokemonEquipe().Count; i++)
+                {
+                    if (Joueur.getPokemonEquipe()[i].getPvRestant() > 0)
+                    {
+                        equipePokemonEncoreEnVie = true;
+                    }
+                }
+
+                if (equipePokemonEncoreEnVie == false)
+                {
+                    //  MessageBox.Show("Votre équipe à perdu");
+                }
+                else
+                {
+                    btn_changement_pokemon_click();
+
+                    changementPokemonPokemonKo = true;
+                }
+            }
+            if ((pokemon.getStatutPokemon() == "Brulure" || pokemon.getStatutPokemon() == "Empoisonnement normal" || pokemon.getStatutPokemon() == "Empoisonnement grave") && statutPokemonPerdPvAdversaire == 0 && statutPokemonPerdPvJoueur == 0 && pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0)
+            {
+                statutPokemonPerdPvAdversaire = 1;
+                compteurAdversaire = pokemon.getPvRestant();
+
+                if (pokemon.getStatutPokemon() == "Brulure")
+                {
+                    pokemon.setPvRestant(pokemon.getPvRestant() - (pokemon.getPv() / 16));
+                }
+                else if (pokemon.getStatutPokemon() == "Empoisonnement normal")
+                {
+                    pokemon.setPvRestant(pokemon.getPvRestant() - (pokemon.getPv() / 8));
+                }
+                else if (pokemon.getStatutPokemon() == "Empoisonnement grave")
+                {
+                    pokemon.setPvRestant(pokemon.getPvRestant() - ((pokemon.getPv() / 16) * nombreTourStatutAdversaire));
+                    if (nombreTourStatutAdversaire < 16)
+                    {
+                        nombreTourStatutAdversaire++;
+                    }
+                }
+                rafraichirBarreViePokemonAdversaire();
+            }
+            else if ((pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (pokemonSelectionner.getStatutPokemon() == "Brulure" || pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal" || pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave") && statutPokemonPerdPvAdversaire == 0 && statutPokemonPerdPvJoueur == 0 && pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0)
+            {
+                compteurPv = pokemonSelectionner.getPvRestant();
+                if (pokemonSelectionner.getStatutPokemon() == "Brulure")
+                {
+                    pokemonSelectionner.setPvRestant(pokemonSelectionner.getPvRestant() - (pokemonSelectionner.getPv() / 16));
+                }
+                else if (pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                {
+                    pokemonSelectionner.setPvRestant(pokemonSelectionner.getPvRestant() - (pokemonSelectionner.getPv() / 8));
+                }
+                else if (pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                {
+                    pokemonSelectionner.setPvRestant(pokemonSelectionner.getPvRestant() - ((pokemonSelectionner.getPv() / 16) * nombreTourStatut));
+                    if (nombreTourStatut < 16)
+                    {
+                        nombreTourStatut++;
+                    }
+                }
+                statutPokemonPerdPvJoueur = 1;
+                rafraichirBarreViePokemonJoueur();
+            }
+
+            else if (statutPokemonPerdPvJoueur == 2 && (pokemonSelectionner.getStatutPokemon() == "Brulure" || pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal" || pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave"))
+            {
+                statutPokemonPerdPvJoueur = 0;
+
+                if (pokemonSelectionner.getPvRestant() > 0 && pokemon.getPvRestant() > 0)
+                {
+                    boutons_combat.SetActive(true);
+                    boutons_combat.transform.GetChild(0).gameObject.GetComponent<Button>().Select();   
+                }
+            }
+
+            if (nombreMouvementsBall >= 0)
+            {
+                nombreMouvementsBall = -1;
+            } */
+        }
+
         /// <summary>
         /// Cette méthode gère la vie et la barre du pokémon du joueur
         private void timerBarrePokemonJoueur()
         {
 
-            if (compteur >= pokemonJoueurSelectionner.getPvRestant() && compteur >= 0 && compteur <= pokemonJoueurSelectionner.getPv() && gagnePvPokemonJoueur == false || compteur <= pokemonJoueurSelectionner.getPvRestant() && compteur <= pokemonJoueurSelectionner.getPv() && gagnePvPokemonJoueur == true)
+            if (compteur >= JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() && compteur >= 0 && compteur <= JoueurManager.Joueurs[0].pokemonSelectionner.getPv() && gagnePvPokemonJoueur == false || compteur <= JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() && compteur <= JoueurManager.Joueurs[0].pokemonSelectionner.getPv() && gagnePvPokemonJoueur == true)
             {
 
-                if (compteur >= pokemonJoueurSelectionner.getPv() / 2)
+                if (compteur >= JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 2)
                 {
                     barViePokemonJoueurImage.color = new Color32(81, 209, 39, 255);
-                    barViePokemonJoueurImage.fillAmount = (float)(pokemonJoueurSelectionner.getPv() - (pokemonJoueurSelectionner.getPv() - compteur)) / pokemonJoueurSelectionner.getPv() + 0.01f;
-                    LabelPvPokemonJoueurUI.text = compteur + " / " + pokemonJoueurSelectionner.getPv() + " PV";
+                    barViePokemonJoueurImage.fillAmount = (float)(JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - compteur)) / JoueurManager.Joueurs[0].pokemonSelectionner.getPv() + 0.01f;
+                    LabelPvPokemonJoueurUI.text = compteur + " / " + JoueurManager.Joueurs[0].pokemonSelectionner.getPv() + " PV";
 
                 }
-                else if (compteur < pokemonJoueurSelectionner.getPv() / 2 && compteur >= pokemonJoueurSelectionner.getPv() / 5)
+                else if (compteur < JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 2 && compteur >= JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 5)
                 {
                     barViePokemonJoueurImage.color = Color.yellow;
-                    barViePokemonJoueurImage.fillAmount = (float)(pokemonJoueurSelectionner.getPv() - (pokemonJoueurSelectionner.getPv() - compteur)) / pokemonJoueurSelectionner.getPv();
-                    LabelPvPokemonJoueurUI.text = compteur + " / " + pokemonJoueurSelectionner.getPv() + " PV";
+                    barViePokemonJoueurImage.fillAmount = (float)(JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - compteur)) / JoueurManager.Joueurs[0].pokemonSelectionner.getPv();
+                    LabelPvPokemonJoueurUI.text = compteur + " / " + JoueurManager.Joueurs[0].pokemonSelectionner.getPv() + " PV";
                 }
-                else if (compteur < pokemonJoueurSelectionner.getPv() / 5 && compteur > 0)
+                else if (compteur < JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 5 && compteur > 0)
                 {
                     barViePokemonJoueurImage.color = Color.red;
-                    barViePokemonJoueurImage.fillAmount = (float)(pokemonJoueurSelectionner.getPv() - (pokemonJoueurSelectionner.getPv() - compteur)) / pokemonJoueurSelectionner.getPv();
-                    LabelPvPokemonJoueurUI.text = compteur + " / " + pokemonJoueurSelectionner.getPv() + " PV";
+                    barViePokemonJoueurImage.fillAmount = (float)(JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - compteur)) / JoueurManager.Joueurs[0].pokemonSelectionner.getPv();
+                    LabelPvPokemonJoueurUI.text = compteur + " / " + JoueurManager.Joueurs[0].pokemonSelectionner.getPv() + " PV";
                 }
 
                 else
                 {
 
 
-                    if (pokemonJoueurSelectionner.getPv() - (pokemonJoueurSelectionner.getPv() - compteur) > 0)
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - compteur) > 0)
                     {
-                        barViePokemonJoueurImage.fillAmount = (float)(pokemonJoueurSelectionner.getPv() - (pokemonJoueurSelectionner.getPv() - compteur)) / pokemonJoueurSelectionner.getPv();
-                        LabelPvPokemonJoueurUI.text = compteur + " / " + pokemonJoueurSelectionner.getPv() + " PV";
+                        barViePokemonJoueurImage.fillAmount = (float)(JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() - compteur)) / JoueurManager.Joueurs[0].pokemonSelectionner.getPv();
+                        LabelPvPokemonJoueurUI.text = compteur + " / " + JoueurManager.Joueurs[0].pokemonSelectionner.getPv() + " PV";
 
 
                     }
@@ -2383,7 +3134,7 @@ namespace ProjetP3DScene1
                         barViePokemonJoueurImage.fillAmount = 0f;
                         LabelPvPokemonJoueurUI.text = "K.O.";
 
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " est K.O.");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " est K.O.");
                         StartCoroutine(DialogueCombat());
                     }
                 }
@@ -2418,38 +3169,38 @@ namespace ProjetP3DScene1
                 }
                 else
                 {
-                    if (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure")
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure")
                     {
-                        nbDegats = pokemonJoueurSelectionner.getPv() / 16;
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " brule");
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " perd " + nbDegats + " pv");
+                        nbDegats = JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16;
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " brule");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " perd " + nbDegats + " pv");
                         StartCoroutine(DialogueCombat());
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
                     {
-                        nbDegats = pokemonJoueurSelectionner.getPv() / 8;
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " souffre du poison");
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " perd " + nbDegats + " pv");
+                        nbDegats = JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 8;
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " souffre du poison");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " perd " + nbDegats + " pv");
                         StartCoroutine(DialogueCombat());
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
                     {
-                        nbDegats = (pokemonJoueurSelectionner.getPv() / 16) * (nombreTourStatut - 1);
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " souffre du poison");
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " perd " + nbDegats + " pv");
+                        nbDegats = (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16) * (nombreTourStatut - 1);
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " souffre du poison");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " perd " + nbDegats + " pv");
                         StartCoroutine(DialogueCombat());
                     }
                 }
 
                 if (gagnePvPokemonJoueur == true)
                 {
-                    compteur = pokemonJoueurSelectionner.getPvRestant();
+                    compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
                     gagnePvPokemonJoueur = false;
 
                     rafraichirBarreViePokemonJoueur();
                 }
 
-                else if (pokemonJoueurAttaquePremier == false && nombreMouvementsBall < 0 && pokemonJoueurSelectionner.getPvRestant() > 0 && changement_pokemon == false && statutPokemonPerdPvJoueur == 0)
+                else if (pokemonJoueurAttaquePremier == false && nombreMouvementsBall < 0 && JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0 && changement_pokemon == false && statutPokemonPerdPvJoueur == 0)
                 {
                     rafraichirBarreViePokemonAdversaire();
                 }
@@ -2458,7 +3209,7 @@ namespace ProjetP3DScene1
                 {
 
                 }
-                else if ((pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0 && statutPokemonPerdPvAdversaire == 0 && pokemonJoueurSelectionner.getPvRestant() > 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil")) || (pokemonJoueurAttaquePremier == false && nombreMouvementsBall >= 0 && nombreMouvementsBall < 4 && pokemonJoueurSelectionner.getPvRestant() > 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil")))
+                else if ((pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0 && statutPokemonPerdPvAdversaire == 0 && JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil")) || (pokemonJoueurAttaquePremier == false && nombreMouvementsBall >= 0 && nombreMouvementsBall < 4 && JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil")))
                 {
                     try
                     {
@@ -2490,15 +3241,15 @@ namespace ProjetP3DScene1
 
                 }
 
-                else if (pokemon.getPvRestant() > 0 && pokemonJoueurSelectionner.getPvRestant() <= 0)
+                else if (pokemon.getPvRestant() > 0 && JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() <= 0)
                 {
                     // timerAnimationKo.Start();
 
                     bool equipePokemonEncoreEnVie = false;
 
-                    for (int i = 0; i < Joueur.getPokemonEquipe().Count; i++)
+                    for (int i = 0; i < JoueurManager.Joueurs[0].getPokemonEquipe().Count; i++)
                     {
-                        if (Joueur.getPokemonEquipe()[i].getPvRestant() > 0)
+                        if (JoueurManager.Joueurs[0].getPokemonEquipe()[i].getPvRestant() > 0)
                         {
                             equipePokemonEncoreEnVie = true;
                         }
@@ -2548,20 +3299,20 @@ namespace ProjetP3DScene1
                     }
                     rafraichirBarreViePokemonAdversaire();
                 }
-                else if ((pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave") && statutPokemonPerdPvAdversaire == 0 && statutPokemonPerdPvJoueur == 0 && pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0)
+                else if ((pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave") && statutPokemonPerdPvAdversaire == 0 && statutPokemonPerdPvJoueur == 0 && pokemonJoueurAttaquePremier == true && pokemon.getPvRestant() > 0)
                 {
-                    compteur = pokemonJoueurSelectionner.getPvRestant();
-                    if (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure")
+                    compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 16));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16));
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 8));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 8));
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - ((pokemonJoueurSelectionner.getPv() / 16) * nombreTourStatut));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - ((JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16) * nombreTourStatut));
                         if (nombreTourStatut < 16)
                         {
                             nombreTourStatut++;
@@ -2571,11 +3322,11 @@ namespace ProjetP3DScene1
                     rafraichirBarreViePokemonJoueur();
                 }
 
-                else if (statutPokemonPerdPvJoueur == 2 && (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave"))
+                else if (statutPokemonPerdPvJoueur == 2 && (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave"))
                 {
                     statutPokemonPerdPvJoueur = 0;                  
 
-                    if (pokemonJoueurSelectionner.getPvRestant() > 0 && pokemon.getPvRestant() > 0)
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0 && pokemon.getPvRestant() > 0)
                     {
                         try
                         {
@@ -2659,9 +3410,9 @@ namespace ProjetP3DScene1
 
                 if (statutPokemonPerdPvAdversaire != 2)
                 {
-                    if ((pokemonJoueurSelectionner.getStatutPokemon() != "Paralysie" && pokemonJoueurSelectionner.getStatutPokemon() != "Gelé" && pokemonJoueurSelectionner.getStatutPokemon() != "Sommeil") || (pokemonJoueurSelectionner.getStatutPokemon() == "Paralysie" && reussiteAttaqueParalyse == true) || (pokemonJoueurSelectionner.getStatutPokemon() == "Gelé" && reussiteAttaqueGel == true))
+                    if ((JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() != "Paralysie" && JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() != "Gelé" && JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() != "Sommeil") || (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Paralysie" && reussiteAttaqueParalyse == true) || (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Gelé" && reussiteAttaqueGel == true))
                     {
-                        dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " a fait " + nbDegats + " dégâts ");
+                        dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " a fait " + nbDegats + " dégâts ");
                         StartCoroutine(DialogueCombat());
                     }
                 }
@@ -2712,33 +3463,33 @@ namespace ProjetP3DScene1
 
                     if (pokemon.getGainEvPv() > 0)
                     {
-                        pokemonJoueurSelectionner.setEvPv(pokemonJoueurSelectionner.getEvPv() + pokemon.getGainEvPv());
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setEvPv(JoueurManager.Joueurs[0].pokemonSelectionner.getEvPv() + pokemon.getGainEvPv());
                     }
                     if (pokemon.getGainEvAttaque() > 0)
                     {
-                        pokemonJoueurSelectionner.setEvAttaque(pokemonJoueurSelectionner.getEvAttaque() + pokemon.getGainEvAttaque());
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setEvAttaque(JoueurManager.Joueurs[0].pokemonSelectionner.getEvAttaque() + pokemon.getGainEvAttaque());
                     }
                     if (pokemon.getGainEvDefense() > 0)
                     {
-                        pokemonJoueurSelectionner.setEvDefense(pokemonJoueurSelectionner.getEvDefense() + pokemon.getGainEvDefense());
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setEvDefense(JoueurManager.Joueurs[0].pokemonSelectionner.getEvDefense() + pokemon.getGainEvDefense());
                     }
                     if (pokemon.getGainEvVitesse() > 0)
                     {
-                        pokemonJoueurSelectionner.setEvVitesse(pokemonJoueurSelectionner.getEvVitesse() + pokemon.getGainEvVitesse());
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setEvVitesse(JoueurManager.Joueurs[0].pokemonSelectionner.getEvVitesse() + pokemon.getGainEvVitesse());
                     }
                     if (pokemon.getGainEvAttaqueSpeciale() > 0)
                     {
-                        pokemonJoueurSelectionner.setEvAttaqueSpeciale(pokemonJoueurSelectionner.getEvAttaqueSpeciale() + pokemon.getGainEvAttaqueSpeciale());
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setEvAttaqueSpeciale(JoueurManager.Joueurs[0].pokemonSelectionner.getEvAttaqueSpeciale() + pokemon.getGainEvAttaqueSpeciale());
                     }
                     if (pokemon.getGainEvDefenseSpeciale() > 0)
                     {
-                        pokemonJoueurSelectionner.setEvDefenseSpeciale(pokemonJoueurSelectionner.getEvDefenseSpeciale() + pokemon.getGainEvDefenseSpeciale());
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setEvDefenseSpeciale(JoueurManager.Joueurs[0].pokemonSelectionner.getEvDefenseSpeciale() + pokemon.getGainEvDefenseSpeciale());
                     }
 
-                    compteurExperience = (100 * (pokemonJoueurSelectionner.getExperience() - pokemonJoueurSelectionner.getExperiencePokemonReturn())) / (pokemonJoueurSelectionner.getExperiencePokemonProchainNiveau() - pokemonJoueurSelectionner.getExperiencePokemonReturn());
-                    double experienceGagner = pokemonJoueurSelectionner.gainExperiencePokemonBattu(pokemon);
+                    compteurExperience = (100 * (JoueurManager.Joueurs[0].pokemonSelectionner.getExperience() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn())) / (JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonProchainNiveau() - JoueurManager.Joueurs[0].pokemonSelectionner.getExperiencePokemonReturn());
+                    double experienceGagner = JoueurManager.Joueurs[0].pokemonSelectionner.gainExperiencePokemonBattu(pokemon);
 
-                    dialogueCombat.getDialogue().AddSentence(pokemonJoueurSelectionner.getNom() + " a obtenu " + experienceGagner + " points d'expérience");
+                    dialogueCombat.getDialogue().AddSentence(JoueurManager.Joueurs[0].pokemonSelectionner.getNom() + " a obtenu " + experienceGagner + " points d'expérience");
                     StartCoroutine(DialogueCombat());
 
                     statutPokemonPerdPvAdversaire = 0;
@@ -2760,7 +3511,7 @@ namespace ProjetP3DScene1
                 {
                     rafraichirBarreViePokemonJoueur();
                 }
-                else if (pokemonJoueurAttaquePremier == false && pokemon.getPvRestant() > 0 && statutPokemonPerdPvAdversaire == 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (pokemonJoueurSelectionner.getStatutPokemon() == "Normal" || pokemonJoueurSelectionner.getStatutPokemon() == "Paralysie" || pokemonJoueurSelectionner.getStatutPokemon() == "Gelé" || pokemonJoueurSelectionner.getStatutPokemon() == "Sommeil"))
+                else if (pokemonJoueurAttaquePremier == false && pokemon.getPvRestant() > 0 && statutPokemonPerdPvAdversaire == 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Normal" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Paralysie" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Gelé" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Sommeil"))
                 {
                     try
                     {
@@ -2812,20 +3563,20 @@ namespace ProjetP3DScene1
 
                     rafraichirBarreViePokemonAdversaire();
                 }
-                else if (pokemonJoueurAttaquePremier == false && statutPokemonPerdPvAdversaire == 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave") && pokemon.getPvRestant() > 0)
+                else if (pokemonJoueurAttaquePremier == false && statutPokemonPerdPvAdversaire == 0 && (pokemon.getStatutPokemon() == "Normal" || pokemon.getStatutPokemon() == "Paralysie" || pokemon.getStatutPokemon() == "Gelé" || pokemon.getStatutPokemon() == "Sommeil") && (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave") && pokemon.getPvRestant() > 0)
                 {
-                    compteur = pokemonJoueurSelectionner.getPvRestant();
-                    if (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure")
+                    compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 16));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16));
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 8));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 8));
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - ((pokemonJoueurSelectionner.getPv() / 16) * nombreTourStatut));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - ((JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16) * nombreTourStatut));
                         if (nombreTourStatut < 16)
                         {
                             nombreTourStatut++;
@@ -2840,7 +3591,7 @@ namespace ProjetP3DScene1
 
                     if (pokemon.getPvRestant() > 0)
                     {
-                        if (pokemonJoueurSelectionner.getStatutPokemon() == "Normal" || pokemonJoueurSelectionner.getStatutPokemon() == "Paralysie" || pokemonJoueurSelectionner.getStatutPokemon() == "Gelé" || pokemonJoueurSelectionner.getStatutPokemon() == "Sommeil")
+                        if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Normal" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Paralysie" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Gelé" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Sommeil")
                         {
                             try
                             {
@@ -2869,18 +3620,18 @@ namespace ProjetP3DScene1
                         }
                         else
                         {
-                            compteur = pokemonJoueurSelectionner.getPvRestant();
-                            if (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure")
+                            compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
+                            if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure")
                             {
-                                pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 16));
+                                JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16));
                             }
-                            else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                            else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
                             {
-                                pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 8));
+                                JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 8));
                             }
-                            else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                            else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
                             {
-                                pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - ((pokemonJoueurSelectionner.getPv() / 16) * nombreTourStatut));
+                                JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - ((JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16) * nombreTourStatut));
                                 if (nombreTourStatut < 16)
                                 {
                                     nombreTourStatut++;
@@ -2893,21 +3644,21 @@ namespace ProjetP3DScene1
 
                 }
 
-                if (pokemonJoueurAttaquePremier == false && statutPokemonPerdPvJoueur == 1 && (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal" || pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave") && pokemonJoueurSelectionner.getPvRestant() > 0)
+                if (pokemonJoueurAttaquePremier == false && statutPokemonPerdPvJoueur == 1 && (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal" || JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave") && JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() > 0)
                 {
-                    compteur = pokemonJoueurSelectionner.getPvRestant();
+                    compteur = JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant();
 
-                    if (pokemonJoueurSelectionner.getStatutPokemon() == "Brulure")
+                    if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Brulure")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 16));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16));
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement normal")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement normal")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - (pokemonJoueurSelectionner.getPv() / 8));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - (JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 8));
                     }
-                    else if (pokemonJoueurSelectionner.getStatutPokemon() == "Empoisonnement grave")
+                    else if (JoueurManager.Joueurs[0].pokemonSelectionner.getStatutPokemon() == "Empoisonnement grave")
                     {
-                        pokemonJoueurSelectionner.setPvRestant(pokemonJoueurSelectionner.getPvRestant() - ((pokemonJoueurSelectionner.getPv() / 16) * nombreTourStatut));
+                        JoueurManager.Joueurs[0].pokemonSelectionner.setPvRestant(JoueurManager.Joueurs[0].pokemonSelectionner.getPvRestant() - ((JoueurManager.Joueurs[0].pokemonSelectionner.getPv() / 16) * nombreTourStatut));
                         if (nombreTourStatut < 16)
                         {
                             nombreTourStatut++;

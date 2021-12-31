@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Doozy.Engine.UI;
+// using Doozy.Engine.UI;
 using UnityEngine;
 
 public class AfterClosingMenu : MonoBehaviour

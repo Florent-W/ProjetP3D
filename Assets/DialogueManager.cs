@@ -41,7 +41,10 @@ public class DialogueManager : MonoBehaviour
         dialogueStatut = dialogue;
 
         dialogueStatut.SetStatutDialogue("Demarrage");
-     //   dialogue.GetSentences().Clear();
+
+        boxDialogueAnimator.gameObject.transform.GetChild(2).gameObject.GetComponent<Button>().Select();
+
+        //   dialogue.GetSentences().Clear();
 
         nameText.text = dialogue.GetName();
 
@@ -102,7 +105,7 @@ public class DialogueManager : MonoBehaviour
 
         if (sentences.Count > 0)
         {
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
             DisplayNextSentence(dialogue);
         }
         else

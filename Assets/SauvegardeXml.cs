@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
@@ -8,9 +9,9 @@ using UnityEngine.UI;
 
 public class SauvegardeXml : MonoBehaviour
 {
-    public Text LabelNomPersonnage, LabelNombrePokemon;
+    public GameObject sauvegardeGameObject;
     public Button BoutonConfirmerChargement;
-    public ClassLibrary.Personnage Joueur = new ClassLibrary.Personnage();
+    public ClassLibrary.Dresseur Joueur = new ClassLibrary.Dresseur();
 
     public void Sauvegarde_Click()
     {
@@ -19,23 +20,27 @@ public class SauvegardeXml : MonoBehaviour
         // if (saveFileDialog.ShowDialog() == DialogResult.OK)
         // {
         // var cheminFichier = saveFileDialog.FileName;
-        string cheminFichier = Application.streamingAssetsPath + "/Joueur.xml";
-        XmlWriter writer = XmlWriter.Create(cheminFichier);
+        var xmlWriterOptions = new XmlWriterSettings();
+        xmlWriterOptions.Indent = true;
+        xmlWriterOptions.NewLineOnAttributes = true;
 
-        DataContractSerializer serializer = new DataContractSerializer(typeof(ClassLibrary.Personnage));
+            string cheminFichier = Application.streamingAssetsPath + "/Joueur.xml";
+            XmlWriter writer = XmlWriter.Create(cheminFichier, xmlWriterOptions);
 
-        try
-        {
-            serializer.WriteObject(writer, Joueur);
-        }
-        catch
-        {
-            //  MessageBox.Show("Impossible de serialiser : " + Environment.NewLine + erreur);
-        }
+            DataContractSerializer serializer = new DataContractSerializer(typeof(ClassLibrary.Personnage));
 
-        writer.Close();
-        // }
-    } 
+            try
+            {
+                serializer.WriteObject(writer, Joueur);
+            }
+            catch
+            {
+                //  MessageBox.Show("Impossible de serialiser : " + Environment.NewLine + erreur);
+            }
+
+            writer.Close();
+            // }
+    }
 
     public void Chargement_click()
     {
@@ -45,31 +50,48 @@ public class SauvegardeXml : MonoBehaviour
         //  {
         //   var cheminFichier = openFileDialog.FileName;
 
-        string cheminFichier = Application.streamingAssetsPath + "/Joueur.xml";
-        DataContractSerializer serializer = new DataContractSerializer(typeof(ClassLibrary.Personnage));
-        FileStream fs = new FileStream(cheminFichier, FileMode.Open);
-
-        XmlDictionaryReader reader = XmlDictionaryReader.CreateTextReader(fs, new XmlDictionaryReaderQuotas());
-
-        try
+        for (int i = 1; i <= 3; i++) // On met toutes les sauvegardes
         {
-            //   nombrePokemonAvantChargementSauvegarde = Joueur.getPokemonEquipe().Count;
-            Joueur = (ClassLibrary.Personnage)serializer.ReadObject(reader);
-            LabelNomPersonnage.text = Joueur.getNom();
-            LabelNombrePokemon.text = Joueur.getPokemonEquipe().Count.ToString();
-            LabelNomPersonnage.gameObject.SetActive(true);
-            LabelNombrePokemon.gameObject.SetActive(true);
-            BoutonConfirmerChargement.interactable = true;
+            string cheminFichier = Application.streamingAssetsPath + "/Joueur_" + i + ".xml";
+            DataContractSerializer serializer = new DataContractSerializer(typeof(ClassLibrary.Dresseur));
+            FileStream fs = new FileStream(cheminFichier, FileMode.Open);
 
-            // rafraichirApresChargementSauvegarde();
+            XmlDictionaryReader reader = XmlDictionaryReader.CreateTextReader(fs, new XmlDictionaryReaderQuotas());
+
+            try
+            {
+                //   nombrePokemonAvantChargementSauvegarde = Joueur.getPokemonEquipe().Count;
+                Joueur = (ClassLibrary.Dresseur)serializer.ReadObject(reader);
+
+                GameObject sauvegarde = null;
+                if (i > 1) { // On met les emplacements des autres sauvegardes
+                   sauvegarde = Instantiate(sauvegardeGameObject, sauvegardeGameObject.transform.parent);
+                }
+                else if(i == 1)
+                {
+                    sauvegarde = sauvegardeGameObject;
+                }
+                sauvegarde.transform.parent.gameObject.transform.GetChild(i - 1).gameObject.transform.GetChild(1).gameObject.GetComponent<Text>().text = "Dresseur : " + Joueur.getNom();
+                sauvegarde.transform.parent.gameObject.transform.GetChild(i - 1).gameObject.transform.GetChild(2).gameObject.GetComponent<Text>().text = "Pokédex : " + Joueur.getPokemonEquipe().Count.ToString();
+                sauvegarde.transform.parent.gameObject.transform.GetChild(i - 1).gameObject.name = i.ToString();
+                sauvegarde.transform.parent.gameObject.transform.GetChild(i - 1).gameObject.SetActive(true);
+               // LabelNombrePokemon.gameObject.SetActive(true);
+               /*
+                if (i == 1) // On met le bouton de confirmation
+                {
+                  // BoutonConfirmerChargement.interactable = true;
+                }
+                */
+                // rafraichirApresChargementSauvegarde();
+
+            }
+            catch(Exception erreur)
+            {
+                Debug.Log("Impossible de charger." + erreur);
+            }
+            reader.Close();
+
 
         }
-        catch
-        {
-            //  MessageBox.Show("Impossible de deserialiser : " + erreur);
-        }
-        reader.Close();
-
-
     }
 }

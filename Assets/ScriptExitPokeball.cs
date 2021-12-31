@@ -29,7 +29,7 @@ public class ScriptExitPokeball : StateMachineBehaviour
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        GameObject pokemonJoueurGameObject = (GameObject) Instantiate(Resources.Load("Models/Pokemon/" + animator.GetInteger("NumeroPokedexPokemon")), animator.gameObject.transform.position, animator.gameObject.transform.rotation);
+        GameObject pokemonJoueurGameObject = (GameObject) Instantiate(Resources.Load("Models/Pokemon/1"), animator.gameObject.transform.position, animator.gameObject.transform.rotation);
         pokemonJoueurGameObject.name = "PokemonJoueur";
 
         /*

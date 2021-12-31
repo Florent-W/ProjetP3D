@@ -8,6 +8,7 @@ public class BoutonMenuStartScript : MonoBehaviour
 {
     public void OnSelect(BaseEventData eventData)
     {
+        /*
         if (this.gameObject.name == "BoutonMenuPokemon")
         {
             this.gameObject.transform.GetChild(1).gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Menu/Icone_Pokemon_Menu_Start_Selection");
@@ -22,10 +23,12 @@ public class BoutonMenuStartScript : MonoBehaviour
         }
 
         this.gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Menu/Background_menu_start_bouton");
+        */
     }
 
     public void OnDeselect(BaseEventData eventData)
     {
+        /*
         if (this.gameObject.name == "BoutonMenuPokemon")
         {
             this.gameObject.transform.GetChild(1).gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Menu/Icone_Pokemon_Menu_Start_Non_Selection");
@@ -40,5 +43,6 @@ public class BoutonMenuStartScript : MonoBehaviour
         }
 
         this.gameObject.GetComponent<Image>().sprite = Resources.Load<Sprite>("Images/Menu/Background_menu_start_bouton_non_selection");
+        */
     }
 }

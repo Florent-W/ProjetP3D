@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.Serialization;
 using System.Xml;
-using Doozy.Engine.UI;
+// using Doozy.Engine.UI;
 using MySql.Data.MySqlClient;
 
 using UnityEngine;
@@ -34,12 +34,15 @@ namespace ClassLibrary
     public class Jeu
     {
         private List<Attaque> m_liste_attaques = new List<Attaque>();
+        private List<EspecePokemon> m_liste_espece_pokemon = new List<EspecePokemon>();
         private List<Pokemon> m_liste_pokemon = new List<Pokemon>();
         private List<Pokemon> m_liste_pokemon_starter = new List<Pokemon>();
-        private List<Personnage> m_liste_dresseur = new List<Personnage>();
+        private List<Personnage> m_liste_personnage = new List<Personnage>();
+        private List<Dresseur> m_liste_dresseur = new List<Dresseur>();
+        private List<Sort> m_liste_sorts = new List<Sort>();
         private List<Objet> m_liste_objets = new List<Objet>();
 
-        private UIPopup m_popup_menu;
+       // private UIPopup m_popup_menu;
 
         /// <summary>
         /// Cette méthode permet de récupérer la liste des attaques présentes dans le jeu
@@ -48,6 +51,25 @@ namespace ClassLibrary
         public List<Attaque> getListeAttaques()
         {
             return this.m_liste_attaques;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de récupérer l'espèce d'un pokemon à partir d'un numero de pokedex
+        /// </summary>
+        /// <returns>Récupère l'espèce d'un pokémon</returns>
+        public EspecePokemon GetEspeceWithNoId(int numeroIdPokedex)
+        {
+            EspecePokemon espece = this.m_liste_espece_pokemon.Find(especePokemon => especePokemon.getNoIdPokedex().Equals(numeroIdPokedex));
+            return espece;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de récupérer la liste des especes présents dans le jeu
+        /// </summary>
+        /// <returns>Récupère la liste des especes de pokémon</returns>
+        public List<EspecePokemon> getListeEspecePokemon()
+        {
+            return this.m_liste_espece_pokemon;
         }
 
         /// <summary>
@@ -66,6 +88,15 @@ namespace ClassLibrary
         public List<Pokemon> getListePokemonStarter()
         {
             return this.m_liste_pokemon_starter;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de récupérer la liste des sorts présents dans le jeu
+        /// </summary>
+        /// <returns>Récupère la liste des sort du jeu</returns>
+        public List<Sort> getListeSort()
+        {
+            return this.m_liste_sorts;
         }
 
         /// <summary>
@@ -98,12 +129,171 @@ namespace ClassLibrary
         }
 
         /// <summary>
+        /// Cette méthode permet de créer et d'initialiser un pokémon
+        /// </summary>
+        /// <param name=basePvPokemon>Base pv</param>
+        /// <param name=nomPokémon>Nom</param>
+        /// <param name=noIdPokedex>Numéro du pokémon dans le pokédex</param>
+        /// <param name=type>Type du pokémon</param>
+        /// <param name=courbeExperience>Type de courbe de l'expérience du pokémon</param>
+        /// <param name=gainExperience>Nombre de point d'expérience reçu si le pokémon est battu</param>
+        /// <param name=tauxCapture>Le taux de capture du pokémon</param>
+        /// <param name=probabiliteSexeFeminin>Probabilité que le pokémon soit féminin</param>
+        /// <param name=baseAttaque>Base attaque</param>
+        /// <param name=baseDefense>Base défense</param>
+        /// <param name=baseVitesse>Base vitesse</param>
+        /// <param name=baseAttaqueSpeciale>Base attaque spéciale</param>
+        /// <param name=baseDefenseSpeciale>Base défense spéciale</param>
+        /// <param name=gainEvPv>Gain d'EV PV une fois le pokémon battu</param>
+        /// <param name=gainEvAttaque>Gain d'EV Attaque une fois le pokémon battu</param>
+        /// <param name=gainEvDefense>Gain d'EV Défense une fois le pokémon battu</param>
+        /// <param name=gainEvVitesse>Gain d'EV Vitesse une fois le pokémon battu</param>
+        /// <param name=gainEvAttaqueSpeciale>Gain d'EV Attaque Spéciale une fois le pokémon battu</param>
+        /// <param name=gainEvDefenseSpeciale>Gain d'EV Défense Spéciale une fois le pokémon battu</param>
+        /// <returns>Espece du pokémon</returns>
+        public EspecePokemon createEspecePokemon(int basePvPokemon, string nomPokemon, int noIdPokedex, string type, string courbeExperience, int gainExperience, int tauxCapture, double probabiliteSexeFeminin, int baseAttaque, int baseDefense, int baseVitesse, int baseAttaqueSpeciale, int baseDefenseSpeciale, int gainEvPv, int gainEvAttaque, int gainEvDefense, int gainEvVitesse, int gainEvAttaqueSpeciale, int gainEvDefenseSpeciale, string resumePokedexPokemon)
+        {
+            EspecePokemon especePoke = new EspecePokemon();
+
+            especePoke.setPokemon(nomPokemon);
+            especePoke.setNoPokedexPokemon(noIdPokedex);
+            especePoke.setType(type);
+            especePoke.setTypeCourbeExperience(courbeExperience);
+            especePoke.setGainExperiencePokemon(gainExperience);
+            especePoke.setTauxCapturePokemon(tauxCapture);
+            especePoke.setProbabiliteSexeFeminin(probabiliteSexeFeminin);
+
+            especePoke.setBasePvPokemon(basePvPokemon);
+            especePoke.setBaseAttaque(baseAttaque);
+            especePoke.setBaseDefense(baseDefense);
+            especePoke.setBaseVitesse(baseVitesse);
+            especePoke.setBaseAttaqueSpeciale(baseAttaqueSpeciale);
+            especePoke.setBaseDefenseSpeciale(baseDefenseSpeciale);
+
+            especePoke.setGainEvPv(gainEvPv);
+            especePoke.setGainEvAttaque(gainEvAttaque);
+            especePoke.setGainEvDefense(gainEvDefense);
+            especePoke.setGainEvVitesse(gainEvVitesse);
+            especePoke.setGainEvAttaqueSpeciale(gainEvAttaqueSpeciale);
+            especePoke.setGainEvDefenseSpeciale(gainEvDefenseSpeciale);
+            especePoke.pokedex_pokemon_resume = resumePokedexPokemon;
+
+            return especePoke;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser la liste des espèces de pokémon présents dans le jeu
+        /// </summary>
+        public void initialisationEspecePokemon()
+        {
+            EspecePokemon especePokemon = new EspecePokemon();
+
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Bulbizarre", 1, "Plante", "Parabolique", 64, 45, 12.5, 49, 49, 45, 65, 65, 0, 0, 0, 0, 1, 0, "Il porte une graine sur son dos depuis la naissance. Elle grandit avec lui."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(70, "Herbizarre", 2, "Plante", "Parabolique", 142, 45, 12.5, 12, 30, 120, 129, 30, 0, 0, 0, 0, 1, 1, "En emmagasinant de l'énergie, son bulbe grossit. Un arôme en émane quand il s'apprête à éclore."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(120, "Florizarre", 3, "Plante", "Parabolique", 236, 45, 12.5, 20, 40, 32, 20, 0, 0, 0, 0, 0, 2, 1, "Une douce senteur émane de sa plante. Cette fragrance calme tous ceux qui sont engagés dans un combat."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(20, "Salamèche", 4, "Feu", "Parabolique", 62, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, "La flamme au bout de sa queue montre la vivacité de son énergie. S'il est faible, sa flamme sera petite."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(70, "Reptincel", 5, "Feu", "Parabolique", 142, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, "Exalté quand il affronte des adversaires puissants, ce Pokémon en vient parfois à cracher des flammes bleutées."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(130, "Dracaufeu", 6, "Feu", "Parabolique", 240, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, "Quand il crache son souffle brûlant, la flamme au bout de sa queue s'embrase."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(20, "Carapuce", 7, "Eau", "Parabolique", 63, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, "Quand il rentre son cou dans sa carapace, il peut projeter de l'eau à haute pression."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(70, "Carabaffe", 8, "Eau", "Parabolique", 142, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, "Il contrôle efficacement sa queue et ses oreilles pour nager encore plus vite."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(150, "Tortank", 9, "Eau", "Parabolique", 239, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, "Les canons sur sa carapace tirent des jets d'eau capables de percer même de l'acier trempé."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Chenipan", 10, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Chrysacier", 11, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Papilusion", 12, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Aspicot", 13, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Coconfort", 14, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Dardargnan", 15, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Roucool", 16, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Roucoups", 17, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Roucarnage", 18, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Rattata", 19, "Normal", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Rattatac", 20, "Normal", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Piafabec", 21, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Rapasdepic", 22, "Vol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Abo", 23, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Arbok", 24, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Pikachu", 25, "Electrik", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Raichu", 26, "Electrik", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Sabelette", 27, "Sol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Sablaireau", 28, "Sol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Nidoran♀", 29, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Nidorina", 30, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Nidoqueen", 31, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Nidoran♂", 32, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Nidorino", 33, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Nidoking", 34, "Poison", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Mélodelfe", 36, "Fée", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Goupix", 37, "Feu", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Feunard", 38, "Feu", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Rondoudou", 39, "Normal", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Grodoudou", 40, "Normal", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Mystherbe", 43, "Plante", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Ortide", 44, "Plante", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Rafflesia", 45, "Plante", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Paras", 46, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Parasect", 47, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Mimitoss", 48, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Aéromite", 49, "Insecte", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+            m_liste_espece_pokemon.Add(this.createEspecePokemon(45, "Taupiqueur", 50, "Sol", "Moyenne", 39, 255, 50, 30, 35, 45, 20, 20, 1, 0, 0, 0, 0, 0, "Pour se protéger, il émet par ses antennes une odeur nauséabonde qui fait fuir ses ennemis."));
+
+        }
+
+        /// <summary>
         /// Cette méthode permet d'initialiser la liste des pokémon présents dans le jeu
         /// </summary>
         public void initialisationPokemon()
         {
             Pokemon pokemon = new Pokemon();
 
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 1, "Charge", "Laser Glace", "Vive-Attaque", "ecras face", 0, 21, "Calme", 31, 31, 31, 31, 31, 31, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 2, "Charge", null, null, null, 0, 20, "Assuré", 20, 12, 30, 1, 20, 10, 42, 43, 43, 33, 23, 23, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 3, "Charge", null, null, null, 0, 40, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 4, "Charge", "Lance-Flammes", null, null, 0, 12, null, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 5, "Charge", null, null, null, 0, 20, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 6, "Charge", null, null, null, 0, 8, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 7, "Charge", null, null, null, 0, 15, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 8, "Laser Glace", null, null, null, 0, 30, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 9, "Charge", null, null, null, 0, 32, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 10, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 11, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 12, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 13, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 14, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 15, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 16, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 17, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 18, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 19, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 20, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 21, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 22, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 23, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 24, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 25, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 26, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 27, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 28, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 29, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 30, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 31, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 32, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 33, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 34, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 36, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 37, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 38, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 39, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 40, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 43, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 44, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 45, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 46, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 47, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 48, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 49, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 50, "Charge", null, null, null, 0, 8, "Calme", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+
+            /*
             m_liste_pokemon.Add(pokemon.createPokemon(45, "Bulbizarre", 1, 1, "Charge", "Laser Glace", "Vive-Attaque", "ecras face", 0, 21, "Calme", "Combat", "Parabolique", 64, 45, 12.5, 49, 49, 45, 65, 65, 31, 31, 31, 31, 31, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, this));
             m_liste_pokemon.Add(pokemon.createPokemon(70, "Herbizarre", 2, 2, "Charge", null, null, null, 0, 20, "Assuré", "Combat", "Parabolique", 142, 45, 12.5, 12, 30, 120, 129, 30, 20, 12, 30, 1, 20, 10, 42, 43, 43, 33, 23, 23, 0, 0, 0, 0, 1, 1, this));
             m_liste_pokemon.Add(pokemon.createPokemon(120, "Florizarre", 3, 3, "Charge", null, null, null, 0, 40, null, "Glace", "Parabolique", 236, 45, 12.5, 20, 40, 32, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, this));
@@ -113,9 +303,25 @@ namespace ClassLibrary
             m_liste_pokemon.Add(pokemon.createPokemon(20, "Carapuce", 7, 7, "Charge", null, null, null, 0, 15, null, "Eau", "Parabolique", 63, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, this));
             m_liste_pokemon.Add(pokemon.createPokemon(70, "Carabaffe", 8, 8, "Laser Glace", null, null, null, 0, 30, null, "Eau", "Parabolique", 142, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, this));
             m_liste_pokemon.Add(pokemon.createPokemon(150, "Tortank", 9, 9, "Charge", null, null, null, 0, 32, null, "Eau", "Parabolique", 239, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, this));
+        */
         }
 
+        /// <summary>
+        /// Ajoute un pokemon à la liste de pokemon existant
+        /// <summary>
+        public Pokemon ajoutPokemonListe(Pokemon pokemon)
+        {
+            m_liste_pokemon.Add(pokemon);
+            return pokemon;
+        }
 
+        /// <summary>
+        /// Retourne le nombre de pokemon existant dans liste
+        /// <summary>
+        public int countPokemonListe()
+        {       
+            return m_liste_pokemon.Count();
+        }
 
         /// <summary>
         /// Cette méthode permet d'initialiser la liste des starters présents dans le jeu
@@ -124,22 +330,72 @@ namespace ClassLibrary
         {
             Pokemon pokemon = new Pokemon();
 
-            m_liste_pokemon_starter.Add(pokemon.createPokemon(45, "Bulbizarre", 1, 1, "Charge", "Laser Glace", "Vive-Attaque", "ecras face", 0, 21, "Calme", "Combat", "Parabolique", 64, 45, 12.5, 49, 49, 45, 65, 65, 31, 31, 31, 31, 31, 31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, this));
-            m_liste_pokemon_starter.Add(pokemon.createPokemon(20, "Salamèche", 4, 4, "Charge", null, null, null, 0, 12, null, "Feu", "Parabolique", 62, 45, 12.5, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, this));
-            m_liste_pokemon_starter.Add(pokemon.createPokemon(20, "Carapuce", 7, 7, "Charge", null, null, null, 0, 15, null, "Eau", "Parabolique", 63, 45, 12.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, this));
+            m_liste_pokemon_starter.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 1, "Charge", "Laser Glace", "Vive-Attaque", "ecras face", 0, 21, "Calme", 31, 31, 31, 31, 31, 31, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon_starter.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 4, "Charge", "Lance-Flammes", null, null, 0, 12, null, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
+            m_liste_pokemon_starter.Add(pokemon.createPokemonWithEspece(countPokemonListe() + 1, 7, "Charge", null, null, null, 0, 15, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, this));
         }
 
         /// <summary>
-        /// Cette méthode permet d'initialiser la liste des dresseurs présents dans le jeu
+        /// Cette méthode permet d'initialiser la liste des personnages présents dans le jeu
         /// </summary>
-        public void initialisationDresseurs()
+        public void initialisationPersonnage()
         {
-            Personnage Red = new Personnage();
+            Dresseur Red = new Dresseur();
+            Dresseur Leaf = new Dresseur();
+            Dresseur Blue = new Dresseur();
+            Dresseur Calem = new Dresseur();
+            Dresseur Cynthia = new Dresseur();
+            Dresseur Dawn = new Dresseur();
+            Dresseur Lillie = new Dresseur();
+            Dresseur Serena = new Dresseur();
+            Dresseur Hau = new Dresseur();
+            Dresseur Hilbert = new Dresseur();
+            Dresseur Krys = new Dresseur();
+            Dresseur Pierre = new Dresseur();
+
+            Personnage Chen = new Personnage();
             Pokemon pokemon = new Pokemon();
 
-            Red.createDresseur("Red", pokemon.setChercherPokemon("Bulbizarre", this), null, null, null, null, null);
+            Red.createDresseur("Red", pokemon.setChercherPokemon("Dracaufeu", this), null, null, null, null, null);
+            Leaf.createDresseur("Leaf", pokemon.setChercherPokemon("Florizarre", this), null, null, null, null, null);
+            Blue.createDresseur("Blue", pokemon.setChercherPokemon("Tortank", this), null, null, null, null, null);
+            Calem.createDresseur("Calem", pokemon.setChercherPokemon("Salamèche", this), null, null, null, null, null);
+            Cynthia.createDresseur("Cynthia", pokemon.setChercherPokemon("Herbizarre", this), null, null, null, null, null);
+            Dawn.createDresseur("Dawn", pokemon.setChercherPokemon("Carapuce", this), null, null, null, null, null);
+            Lillie.createDresseur("Lillie", pokemon.setChercherPokemon("Bulbizarre", this), null, null, null, null, null);
+            Serena.createDresseur("Serena", pokemon.setChercherPokemon("Salamèche", this), null, null, null, null, null);
+            Hau.createDresseur("Hau", pokemon.setChercherPokemon("Bulbizarre", this), null, null, null, null, null);
+            Hilbert.createDresseur("Hilbert", pokemon.setChercherPokemon("Reptincel", this), null, null, null, null, null);
+            Krys.createDresseur("Krys", pokemon.setChercherPokemon("Bulbizarre", this), null, null, null, null, null);
+            Pierre.createDresseur("Pierre", pokemon.setChercherPokemon("Herbizarre", this), null, null, null, null, null);
 
+            Dialogue dialogueChen = new Dialogue();
+            dialogueChen.AddSentence("Bonjour, je suis le professeur Chen.");
+            dialogueChen.AddSentence("Selectionne un pokemon");
+    
+            Chen.createPersonnage("Chen", dialogueChen);
+           
             m_liste_dresseur.Add(Red);
+            m_liste_dresseur.Add(Leaf);
+            m_liste_dresseur.Add(Blue);
+            m_liste_dresseur.Add(Calem);
+            m_liste_dresseur.Add(Cynthia);
+            m_liste_dresseur.Add(Dawn);
+            m_liste_dresseur.Add(Lillie);
+            m_liste_dresseur.Add(Serena);
+            m_liste_dresseur.Add(Hau);
+            m_liste_dresseur.Add(Hilbert);
+            m_liste_dresseur.Add(Krys);
+            m_liste_dresseur.Add(Pierre);
+            m_liste_personnage.Add(Chen);
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser la liste des sorts présents dans le jeu
+        /// </summary>
+        public void initialisationSorts()
+        {
+            m_liste_sorts.Add(new Sort("Expelliarmus", 30));
         }
 
         /// <summary>
@@ -165,9 +421,20 @@ namespace ClassLibrary
         /// <returns>Le personnage cherché</returns>
         public Personnage setChercherPersonnage(string nomPersonnage)
         {
-            return this.m_liste_dresseur.Find(personnage => personnage.getNom().Equals(nomPersonnage));
+            return this.m_liste_personnage.Find(personnage => personnage.getNom().Equals(nomPersonnage));
         }
 
+        /// <summary>
+        /// Cette méthode permet de retourner un dresseur à partir du nom du dresseur recherché et des données du jeu
+        /// </summary>
+        /// <param name=nomDresseur>Nom du personnage cherché</param>
+        /// <returns>Le dresseur cherché</returns>
+        public Dresseur setChercherDresseur(string nomDresseur)
+        {
+            return this.m_liste_dresseur.Find(dresseur => dresseur.getNom().Equals(nomDresseur));
+        }
+
+        /*
         public UIPopup getUIPopUpMenu()
         {
             return this.m_popup_menu;
@@ -177,6 +444,7 @@ namespace ClassLibrary
         {
             this.m_popup_menu = UIPopup.GetPopup(name);
         }
+        */
     }
 
     /// <summary> 
@@ -188,60 +456,27 @@ namespace ClassLibrary
         [DataMember]
         private string m_nom;
         private int m_age;
+        private Dialogue m_dialogue = new Dialogue();
 
-        [DataMember]
-        private List<Pokemon> pokemon_equipe = new List<Pokemon>();
-        [DataMember]
-        private List<Pokemon> pokemon_pc = new List<Pokemon>();
-        [DataMember]
-        private List<Objet> m_objets_sac = new List<Objet>();
+
+        /// <summary> 
+        /// Nombre de points de vie maximum d'un personnage
+        /// <summary> 
+        public int pv { get; set; }
+        // Nombre de points de vie restant d'un personnage
+        public int pvRestants { get; set; }
 
         /// <summary>
         /// Cette méthode permet d'initialiser le nom et l'âge du personnage
         /// </summary>
         /// <param name=nom, age>Nom et âge du personnage</param>
-        public void Perso(string nom, int age)
-        {
-            this.m_nom = nom;
-            this.m_age = age;
-        }
-
-        /// <summary>
-        /// Cette méthode permet d'initialiser le nom et les pokémon d'un personnage
-        /// </summary>
-        /// <param name=nom, Pokemon>Nom et Pokemon du personnage</param>
-        public void createDresseur(string nom, Pokemon Pokemon1, Pokemon Pokemon2, Pokemon Pokemon3, Pokemon Pokemon4, Pokemon Pokemon5, Pokemon Pokemon6)
+        public void createPersonnage(string nom, Dialogue dialogue)
         {
             this.m_nom = nom;
 
-            if (Pokemon1 != null)
+            if (dialogue != null)
             {
-                pokemon_equipe.Add(Pokemon1);
-            }
-
-            if (Pokemon2 != null)
-            {
-                pokemon_equipe.Add(Pokemon2);
-            }
-
-            if (Pokemon3 != null)
-            {
-                pokemon_equipe.Add(Pokemon3);
-            }
-
-            if (Pokemon4 != null)
-            {
-                pokemon_equipe.Add(Pokemon4);
-            }
-
-            if (Pokemon5 != null)
-            {
-                pokemon_equipe.Add(Pokemon5);
-            }
-
-            if (Pokemon6 != null)
-            {
-                pokemon_equipe.Add(Pokemon1);
+                this.m_dialogue = dialogue;
             }
         }
 
@@ -281,6 +516,117 @@ namespace ClassLibrary
             this.m_age = age;
         }
 
+        public Dialogue getDialogue()
+        {
+            return m_dialogue;
+        }
+    
+        /*
+        /// <summary>
+        /// Cette méthode permet d'ajouter un objet au sac du personnage
+        /// </summary>
+        /// <param name=objet>Un objet</param>
+        public void ajouterObjetSac(Objet objet)
+        {
+            // m_objets_sac.Add(objet);
+        } 
+        */
+
+        /*
+        public Pokemon getPokemonEquipe2(int positionPokemonEquipe)
+        {
+            return (Pokemon) pokemon_equipe[positionPokemonEquipe];
+        } 
+        */
+
+        /*
+        public void setJoueur(string nom, int age, List<Pokemon> pokemon_equipe, List<Pokemon> pokemon_pc, List<Objet> objets_sac)
+        {
+            this.m_nom = nom;
+            this.m_age = age;
+
+            this.pokemon_equipe = pokemon_equipe;
+            this.pokemon_pc = pokemon_pc;
+            this.m_objets_sac = objets_sac;
+        }
+        */
+    }
+
+    [System.Serializable]
+    public class Dresseur : Personnage
+    {
+        [DataMember]
+        private List<Pokemon> pokemon_equipe = new List<Pokemon>();
+        [DataMember]
+        private List<Pokemon> pokemon_pc = new List<Pokemon>();
+
+        [DataMember]
+        private List<Objet> m_objets_sac = new List<Objet>();
+
+        public ClassLibrary.Pokemon pokemonSelectionner { get; set; }
+
+        /// <summary>
+        /// Liste des sorts du personnages
+        /// <summary>
+        public List<Sort> m_liste_sorts = new List<Sort>();
+
+        public string menuPauseActuel { get; set; }
+        public bool starterChoisi { get; set; }
+        public bool enCombat { get; set; }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser le nom et les pokémon d'un personnage
+        /// </summary>
+        /// <param name=nom, Pokemon>Nom et Pokemon du personnage</param>
+        public void createDresseur(string nom, Pokemon Pokemon1, Pokemon Pokemon2, Pokemon Pokemon3, Pokemon Pokemon4, Pokemon Pokemon5, Pokemon Pokemon6)
+        {
+            this.setNomPersonnage(nom);
+
+            if (Pokemon1 != null)
+            {
+                pokemon_equipe.Add(Pokemon1);
+            }
+
+            if (Pokemon2 != null)
+            {
+                pokemon_equipe.Add(Pokemon2);
+            }
+
+            if (Pokemon3 != null)
+            {
+                pokemon_equipe.Add(Pokemon3);
+            }
+
+            if (Pokemon4 != null)
+            {
+                pokemon_equipe.Add(Pokemon4);
+            }
+
+            if (Pokemon5 != null)
+            {
+                pokemon_equipe.Add(Pokemon5);
+            }
+
+            if (Pokemon6 != null)
+            {
+                pokemon_equipe.Add(Pokemon1);
+            }
+        }
+
+        /// <summary>
+        /// Cette méthode permet de retourner tous les pokemon de l'équipe du personnage
+        /// </summary>
+        /// <returns>Récupère la liste des pokémon du personnage</returns>
+        public List<Pokemon> getPokemonEquipe()
+        {
+            return (List<Pokemon>)pokemon_equipe;
+        }
+
+        public List<Pokemon> getPokemonPc()
+        {
+            return (List<Pokemon>)pokemon_pc;
+        }
+
         /// <summary>
         /// Cette méthode permet d'ajouter un pokémon à l'équipe du personnage
         /// </summary>
@@ -311,20 +657,13 @@ namespace ClassLibrary
         }
 
         /// <summary>
-        /// Cette méthode permet d'ajouter un objet au sac du personnage
+        /// Cette méthode permet de récupérer la liste des sorts présents pour le personnage
         /// </summary>
-        /// <param name=objet>Un objet</param>
-        public void ajouterObjetSac(Objet objet)
+        /// <returns>Récupère la liste des sort du jeu</returns>
+        public List<Sort> getListeSort()
         {
-            // m_objets_sac.Add(objet);
+            return this.m_liste_sorts;
         }
-
-        /*
-        public Pokemon getPokemonEquipe2(int positionPokemonEquipe)
-        {
-            return (Pokemon) pokemon_equipe[positionPokemonEquipe];
-        } 
-        */
 
         /// <summary>
         /// Cette méthode permet de retourner tous les objets du sac du personnage
@@ -335,6 +674,16 @@ namespace ClassLibrary
             return (List<Objet>)this.m_objets_sac;
         }
 
+
+        /// <summary>
+        /// Cette méthode permet d'ajouter un sort au personnage
+        /// </summary>
+        /// <param name=sort>Sort</param>
+        public void addSort(Sort sort)
+        {
+            this.m_liste_sorts.Add(sort);
+        }
+
         /// <summary>
         /// Cette méthode permet d'initialiser les objets du sac du personnage à partir des données inscrites dans les statistiques du jeu
         /// </summary>
@@ -343,44 +692,410 @@ namespace ClassLibrary
         {
             this.m_objets_sac = jeu.getListeObjet();
         }
-
-        /// <summary>
-        /// Cette méthode permet de retourner tous les pokemon de l'équipe du personnage
-        /// </summary>
-        /// <returns>Récupère la liste des pokémon du personnage</returns>
-        public List<Pokemon> getPokemonEquipe()
-        {
-            return (List<Pokemon>)pokemon_equipe;
-        }
-
-        public List<Pokemon> getPokemonPc()
-        {
-            return (List<Pokemon>)pokemon_pc;
-        }
-
-        public void setJoueur(string nom, int age, List<Pokemon> pokemon_equipe, List<Pokemon> pokemon_pc, List<Objet> objets_sac)
-        {
-            this.m_nom = nom;
-            this.m_age = age;
-
-            this.pokemon_equipe = pokemon_equipe;
-            this.pokemon_pc = pokemon_pc;
-            this.m_objets_sac = objets_sac;
-        }
     }
 
     /// <summary> 
-    /// Classe Pokémon qui possède des attaques, un numéro dans le pokédex
+    /// Classe d'Espèce de Pokémon qui possède un numéro dans le pokédex, va servir à initialiser les pokémon
     /// </summary>
     [System.Serializable]
-    public class Pokemon
+    public class EspecePokemon
+    {
+        [DataMember]
+        private string m_nom;
+        [DataMember]
+        private int m_no_id_pokedex;
+        // Les informations du pokémon présentes dans les pokédex
+        [DataMember]
+        public string pokedex_pokemon_resume { get; set; }
+        [DataMember]
+        private double m_probalite_sexe_feminin;
+        [DataMember]
+        private string m_courbe_experience;
+        [DataMember]
+        private string m_type;
+        [DataMember]
+        private int m_taux_capture;
+
+        [DataMember]
+        private int m_gain_experience;
+        [DataMember]
+        private int m_base_pv;
+        [DataMember]
+        private int m_base_attaque;
+        [DataMember]
+        private int m_base_defense;
+        [DataMember]
+        private int m_base_vitesse;
+        [DataMember]
+        private int m_base_attaque_speciale;
+        [DataMember]
+        private int m_base_defense_speciale;
+
+        [DataMember]
+        private int m_gain_ev_pv;
+        [DataMember]
+        private int m_gain_ev_attaque;
+        [DataMember]
+        private int m_gain_ev_defense;
+        [DataMember]
+        private int m_gain_ev_vitesse;
+        [DataMember]
+        private int m_gain_ev_attaque_speciale;
+        [DataMember]
+        private int m_gain_ev_defense_speciale;
+
+        /// <summary>
+        /// Cette méthode permet de récupérer le nom d'un pokémon
+        /// </summary>
+        /// <returns>Récupère le nom du pokémon</returns>
+        public string getNom()
+        {
+            return m_nom;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer le numéro du pokédex d'un pokémon
+        /// </summary>
+        /// <returns>Récupère le numéro du pokédex d'un pokémon</returns>
+        public int getNoIdPokedex()
+        {
+            return m_no_id_pokedex;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer la probabilité que le pokemon soit féminin
+        /// </summary>
+        /// <returns>Récupère la probabilité que le pokémon soit féminin</returns>
+        public double getProbabiliteSexeFeminin()
+        {
+            return m_probalite_sexe_feminin;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer le type de courbe d'expérience du pokémon
+        /// </summary>
+        /// <returns>Récupère le type de la courbe d'expérience du pokémon</returns>
+        public string getTypeCourbeExperience()
+        {
+            return this.m_courbe_experience;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer le type d'un pokémon
+        /// </summary>
+        /// <returns>Récupère le type du pokémon</returns>
+        public string getType()
+        {
+            return this.m_type;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer le taux de capture d'un pokémon (qui sert pour la formule pour calculer le taux de capture)
+        /// </summary>
+        /// <returns>Récupère le taux de capture du pokémon</returns>
+        public int getTauxCapturePokemon()
+        {
+            return this.m_taux_capture;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer l'expérience (qui sert dans la formule pour calculer l'expérience gagné) que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'expérience du pokémon une fois celui-ci battu</returns>
+        public int getGainExperiencePokemon()
+        {
+            return this.m_gain_experience;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de récupérer la statistique de base des PV d'un pokémon
+        /// </summary>
+        /// <returns>Récupère la statistique de base des PV du pokémon</returns>
+        public int getBasePv()
+        {
+            return m_base_pv;
+        }
+
+
+        // <summary>
+        /// Cette méthode permet de récupérer la statistique de base d'attaque d'un pokémon
+        /// </summary>
+        /// <returns>Récupère la statistique de base d'attaque du pokémon</returns>
+        public int getBaseAttaque()
+        {
+            return m_base_attaque;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer la statistique de base de défense d'un pokémon
+        /// </summary>
+        /// <returns>Récupère la statistique de base de défense du pokémon</returns>
+        public int getBaseDefense()
+        {
+            return m_base_defense;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer la statistique de base de vitesse d'un pokémon
+        /// </summary>
+        /// <returns>Récupère la statistique de base de vitesse du pokémon</returns>
+        public int getBaseVitesse()
+        {
+            return m_base_vitesse;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer la statistique de base d'attaque spéciale d'un pokémon
+        /// </summary>
+        /// <returns>Récupère la statistique de base d'attaque spéciale du pokémon</returns>
+        public int getBaseAttaqueSpeciale()
+        {
+            return m_base_attaque_speciale;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer la statistique de base de défense spéciale d'un pokémon
+        /// </summary>
+        /// <returns>Récupère la statistique de base de défense spéciale du pokémon</returns>
+        public int getBaseDefenseSpeciale()
+        {
+            return m_base_defense_speciale;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer les EV PV que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'EV PV du pokémon une fois celui-ci battu</returns>
+        public int getGainEvPv()
+        {
+            return m_gain_ev_pv;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer les EV Attaque que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'EV Attaque du pokémon une fois celui-ci battu</returns>
+        public int getGainEvAttaque()
+        {
+            return m_gain_ev_attaque;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer les EV Défense que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'EV Défense du pokémon une fois celui-ci battu</returns>
+        public int getGainEvDefense()
+        {
+            return m_gain_ev_defense;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer les EV Vitesse que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'EV Vitesse du pokémon une fois celui-ci battu</returns>
+        public int getGainEvVitesse()
+        {
+            return m_gain_ev_vitesse;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer les EV Attaque Spéciale que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'EV Attaque Spéciale du pokémon une fois celui-ci battu</returns>
+        public int getGainEvAttaqueSpeciale()
+        {
+            return m_gain_ev_attaque_speciale;
+        }
+
+        // <summary>
+        /// Cette méthode permet de récupérer les EV Défense que peut obtenir le pokémon adverse une fois celui-ci battu
+        /// </summary>
+        /// <returns>Récupère le gain d'EV Défense Spéciale du pokémon une fois celui-ci battu</returns>
+        public int getGainEvDefenseSpeciale()
+        {
+            return m_gain_ev_defense_speciale;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser le nom d'un pokémon
+        /// </summary>
+        /// <param name=poke>Un pokémon</param>
+        public void setPokemon(string nom)
+        {
+            this.m_nom = nom;
+        }
+
+        /// <summary>
+        /// Cette méthode permet le numéro du pokédex d'un pokémon
+        /// </summary>
+        /// <param name=no_id_pokedex>Numéro du pokédex du pokémon</param>
+        public void setNoPokedexPokemon(int no_id_pokedex)
+        {
+            this.m_no_id_pokedex = no_id_pokedex;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser la probabilité que le pokémon soit féminin
+        /// </summary>
+        /// <param name=no_id_pokedex>Numéro du pokédex du pokémon</param>
+        public void setProbabiliteSexeFeminin(double probabiliteSexeFeminin)
+        {
+            this.m_probalite_sexe_feminin = probabiliteSexeFeminin;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser le type de courbe d'expérience d'un pokémon
+        /// </summary>
+        /// <param name=typeCourbeExperience>Le type de courbe d'expérience du pokémon</param>
+        public void setTypeCourbeExperience(string typeCourbeExperience)
+        {
+            this.m_courbe_experience = typeCourbeExperience;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser le type d'un pokémon
+        /// </summary>
+        /// <param name=type>Le type du pokémon</param>
+        public void setType(string type)
+        {
+            this.m_type = type;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser le taux de capture d'un pokémon (pour la formule)
+        /// </summary>
+        /// <param name=tauxCapture>Taux de capture utilisé dans la formule pour calculer la probabilité de capture de pokémon</param>
+        public void setTauxCapturePokemon(int tauxCapture)
+        {
+            this.m_taux_capture = tauxCapture;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser le gain d'expérience que le pokémon adverse gagne une fois celui-ci battu (pour la formule)
+        /// </summary>
+        /// <param name=gainExperience>Gain d'expérience que le pokémon adverse gagne une fois celui-ci battu</param>
+        public void setGainExperiencePokemon(int gainExperience)
+        {
+            this.m_gain_experience = gainExperience;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'initialiser la base des pv d'un pokémon
+        /// </summary>
+        /// <param name=basePv>La base pv du pokémon</param>
+        public void setBasePvPokemon(int basePv)
+        {
+            this.m_base_pv = basePv;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir la base de l'attaque du pokémon
+        /// </summary>
+        /// <param name=baseAttaque>Base attaque du pokémon</param>
+        public void setBaseAttaque(int baseAttaque)
+        {
+            this.m_base_attaque = baseAttaque;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir la base de la défense du pokémon
+        /// </summary>
+        /// <param name=baseDéfense>Base défense du pokémon</param>
+        public void setBaseDefense(int baseDefense)
+        {
+            this.m_base_defense = baseDefense;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir la base de la vitesse du pokémon
+        /// </summary>
+        /// <param name=baseVitesse>Base vitesse du pokémon</param>
+        public void setBaseVitesse(int baseVitesse)
+        {
+            this.m_base_vitesse = baseVitesse;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir la base de l'attaque spéciale du pokémon
+        /// </summary>
+        /// <param name=baseAttaqueSpeciale>Base attaque spéciale du pokémon</param>
+        public void setBaseAttaqueSpeciale(int baseAttaqueSpeciale)
+        {
+            this.m_base_attaque_speciale = baseAttaqueSpeciale;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir la base de la défense spéciale du pokémon
+        /// </summary>
+        /// <param name=baseDéfenseSpeciale>Base défense spéciale du pokémon</param>
+        public void setBaseDefenseSpeciale(int baseDefenseSpeciale)
+        {
+            this.m_base_defense_speciale = baseDefenseSpeciale;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir le gain d'EV PV obtenu après avoir battu le pokémon
+        /// </summary>
+        /// <param name=gainEvPv>EV PV obtenu après avoir battu le pokémon</param>
+        public void setGainEvPv(int gainEvPv)
+        {
+            this.m_gain_ev_pv = gainEvPv;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir le gain d'EV Attaque obtenu après avoir battu le pokémon
+        /// </summary>
+        /// <param name=gainEvAttaque>EV Attaque obtenu après avoir battu le pokémon</param>
+        public void setGainEvAttaque(int gainEvAttaque)
+        {
+            this.m_gain_ev_attaque = gainEvAttaque;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir le gain d'EV Défense obtenu après avoir battu le pokémon
+        /// </summary>
+        /// <param name=gainEvDefense>EV Défense obtenu après avoir battu le pokémon</param>
+        public void setGainEvDefense(int gainEvDefense)
+        {
+            this.m_gain_ev_defense = gainEvDefense;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir le gain d'EV Vitesse obtenu après avoir battu le pokémon
+        /// </summary>
+        /// <param name=gainEvVitesse>EV Vitesse obtenu après avoir battu le pokémon</param>
+        public void setGainEvVitesse(int gainEvVitesse)
+        {
+            this.m_gain_ev_vitesse = gainEvVitesse;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir le gain d'EV Attaque Spéciale obtenu après avoir battu le pokémon
+        /// </summary>
+        /// <param name=gainEvAttaqueSpeciale>EV Attaque Spéciale obtenu après avoir battu le pokémon</param>
+        public void setGainEvAttaqueSpeciale(int gainEvAttaqueSpeciale)
+        {
+            this.m_gain_ev_attaque_speciale = gainEvAttaqueSpeciale;
+        }
+
+        /// <summary>
+        /// Cette méthode permet de définir le gain d'EV Défense Spéciale obtenu après avoir battu le pokémon
+        /// </summary>
+        /// <param name=gainEvDefenseSpeciale>EV Défense Spéciale obtenu après avoir battu le pokémon</param>
+        public void setGainEvDefenseSpeciale(int gainEvDefenseSpeciale)
+        {
+            this.m_gain_ev_defense_speciale = gainEvDefenseSpeciale;
+        }
+    }
+
+        /// <summary> 
+        /// Classe Pokémon qui possède des attaques, un numéro dans le pokédex
+        /// </summary>
+        [System.Serializable]
+    public class Pokemon : EspecePokemon
     {
         [DataMember]
         private int m_id;
-        [DataMember]
-        private int m_no_id_pokedex;
-        [DataMember]
-        private string m_nom;
         [DataMember]
         private string m_sexe;
 
@@ -401,32 +1116,12 @@ namespace ClassLibrary
         [DataMember]
         private string m_nature;
         [DataMember]
-        private string m_type;
-        [DataMember]
         private int m_niveau_chance_coup_critique = 1;
         [DataMember]
         private int m_experience = 0;
         [DataMember]
-        private string m_courbe_experience;
-        [DataMember]
-        private int m_gain_experience;
-        [DataMember]
-        private int m_taux_capture;
-        [DataMember]
         private string m_statut = "Normal";
 
-        [DataMember]
-        private int m_base_pv;
-        [DataMember]
-        private int m_base_attaque;
-        [DataMember]
-        private int m_base_defense;
-        [DataMember]
-        private int m_base_vitesse;
-        [DataMember]
-        private int m_base_attaque_speciale;
-        [DataMember]
-        private int m_base_defense_speciale;
         [DataMember]
         private int m_iv_pv;
         [DataMember]
@@ -452,18 +1147,6 @@ namespace ClassLibrary
         private int m_ev_attaque_speciale;
         [DataMember]
         private int m_ev_defense_speciale;
-        [DataMember]
-        private int m_gain_ev_pv;
-        [DataMember]
-        private int m_gain_ev_attaque;
-        [DataMember]
-        private int m_gain_ev_defense;
-        [DataMember]
-        private int m_gain_ev_vitesse;
-        [DataMember]
-        private int m_gain_ev_attaque_speciale;
-        [DataMember]
-        private int m_gain_ev_defense_speciale;
 
         [DataMember]
         private List<Attaque> m_liste_attaque = new List<Attaque>();
@@ -483,27 +1166,9 @@ namespace ClassLibrary
 
         }
 
-        /// <summary>
-        /// Cette méthode permet de récupérer le nom d'un pokémon
-        /// </summary>
-        /// <returns>Récupère le nom du pokémon</returns>
-        public string getNom()
-        {
-            return m_nom;
-        }
-
         public string getSexe()
         {
             return m_sexe;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de récupérer la statistique de base des PV d'un pokémon
-        /// </summary>
-        /// <returns>Récupère la statistique de base des PV du pokémon</returns>
-        public int getBasePv()
-        {
-            return m_base_pv;
         }
 
         /// <summary>
@@ -513,7 +1178,7 @@ namespace ClassLibrary
         public int getPv()
         {
             double niveau = this.m_niveau;
-            double base_pv = this.m_base_pv;
+            double base_pv = this.getBasePv();
             double iv_pv = this.m_iv_pv;
             double ev_pv = this.m_ev_pv;
 
@@ -531,7 +1196,7 @@ namespace ClassLibrary
             double bonusNature = 1;
 
             double niveau = this.m_niveau;
-            double base_attaque = this.m_base_attaque;
+            double base_attaque = this.getBaseAttaque();
             double iv_attaque = this.m_iv_attaque;
             double ev_attaque = this.m_ev_attaque;
 
@@ -559,7 +1224,7 @@ namespace ClassLibrary
             double bonusNature = 1;
 
             double niveau = this.m_niveau;
-            double base_defense = this.m_base_defense;
+            double base_defense = this.getBaseDefense();
             double iv_defense = this.m_iv_defense;
             double ev_defense = this.m_ev_defense;
 
@@ -587,7 +1252,7 @@ namespace ClassLibrary
             double bonusNature = 1;
 
             double niveau = this.m_niveau;
-            double base_vitesse = this.m_base_vitesse;
+            double base_vitesse = this.getBaseVitesse();
             double iv_vitesse = this.m_iv_vitesse;
             double ev_vitesse = this.m_ev_vitesse;
 
@@ -621,7 +1286,7 @@ namespace ClassLibrary
             double bonusNature = 1;
 
             double niveau = this.m_niveau;
-            double base_attaque_speciale = this.m_base_attaque_speciale;
+            double base_attaque_speciale = this.getBaseAttaqueSpeciale();
             double iv_attaque_speciale = this.m_iv_attaque_speciale;
             double ev_attaque_speciale = this.m_ev_attaque_speciale;
 
@@ -649,7 +1314,7 @@ namespace ClassLibrary
             double bonusNature = 1;
 
             double niveau = this.m_niveau;
-            double base_defense_speciale = this.m_base_defense_speciale;
+            double base_defense_speciale = this.getBaseDefenseSpeciale();
             double iv_defense_speciale = this.m_iv_defense_speciale;
             double ev_defense_speciale = this.m_ev_defense_speciale;
 
@@ -714,30 +1379,12 @@ namespace ClassLibrary
         }
 
         // <summary>
-        /// Cette méthode permet de récupérer le numéro du pokédex d'un pokémon
-        /// </summary>
-        /// <returns>Récupère le numéro du pokédex d'un pokémon</returns>
-        public int getNoIdPokedex()
-        {
-            return m_no_id_pokedex;
-        }
-
-        // <summary>
         /// Cette méthode permet de récupérer la nature d'un pokémon
         /// </summary>
         /// <returns>Récupère la nature du pokémon</returns>
         public string getNature()
         {
             return this.m_nature;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer le type d'un pokémon
-        /// </summary>
-        /// <returns>Récupère le type du pokémon</returns>
-        public string getType()
-        {
-            return this.m_type;
         }
 
         // <summary>
@@ -756,33 +1403,6 @@ namespace ClassLibrary
         public int getExperience()
         {
             return this.m_experience;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer le type de courbe d'expérience du pokémon
-        /// </summary>
-        /// <returns>Récupère le type de la courbe d'expérience du pokémon</returns>
-        public string getTypeCourbeExperience()
-        {
-            return this.m_courbe_experience;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer l'expérience (qui sert dans la formule pour calculer l'expérience gagné) que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'expérience du pokémon une fois celui-ci battu</returns>
-        public int getGainExperiencePokemon()
-        {
-            return this.m_gain_experience;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer le taux de capture d'un pokémon (qui sert pour la formule pour calculer le taux de capture)
-        /// </summary>
-        /// <returns>Récupère le taux de capture du pokémon</returns>
-        public int getTauxCapturePokemon()
-        {
-            return this.m_taux_capture;
         }
 
         // <summary>
@@ -912,51 +1532,6 @@ namespace ClassLibrary
         }
 
         // <summary>
-        /// Cette méthode permet de récupérer la statistique de base d'attaque d'un pokémon
-        /// </summary>
-        /// <returns>Récupère la statistique de base d'attaque du pokémon</returns>
-        public int getBaseAttaque()
-        {
-            return m_base_attaque;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer la statistique de base de défense d'un pokémon
-        /// </summary>
-        /// <returns>Récupère la statistique de base de défense du pokémon</returns>
-        public int getBaseDefense()
-        {
-            return m_base_defense;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer la statistique de base de vitesse d'un pokémon
-        /// </summary>
-        /// <returns>Récupère la statistique de base de vitesse du pokémon</returns>
-        public int getBaseVitesse()
-        {
-            return m_statistiques_vitesse;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer la statistique de base d'attaque spéciale d'un pokémon
-        /// </summary>
-        /// <returns>Récupère la statistique de base d'attaque spéciale du pokémon</returns>
-        public int getBaseAttaqueSpeciale()
-        {
-            return m_statistiques_attaque_speciale;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer la statistique de base de défense spéciale d'un pokémon
-        /// </summary>
-        /// <returns>Récupère la statistique de base de défense spéciale du pokémon</returns>
-        public int getBaseDefenseSpeciale()
-        {
-            return m_statistiques_defense_speciale;
-        }
-
-        // <summary>
         /// Cette méthode permet de récupérer les IV PV d'un pokémon
         /// </summary>
         /// <returns>Récupère les IV PV du pokémon</returns>
@@ -1065,60 +1640,6 @@ namespace ClassLibrary
         }
 
         // <summary>
-        /// Cette méthode permet de récupérer les EV PV que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'EV PV du pokémon une fois celui-ci battu</returns>
-        public int getGainEvPv()
-        {
-            return m_gain_ev_pv;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer les EV Attaque que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'EV Attaque du pokémon une fois celui-ci battu</returns>
-        public int getGainEvAttaque()
-        {
-            return m_gain_ev_attaque;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer les EV Défense que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'EV Défense du pokémon une fois celui-ci battu</returns>
-        public int getGainEvDefense()
-        {
-            return m_gain_ev_defense;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer les EV Vitesse que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'EV Vitesse du pokémon une fois celui-ci battu</returns>
-        public int getGainEvVitesse()
-        {
-            return m_gain_ev_vitesse;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer les EV Attaque Spéciale que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'EV Attaque Spéciale du pokémon une fois celui-ci battu</returns>
-        public int getGainEvAttaqueSpeciale()
-        {
-            return m_gain_ev_attaque_speciale;
-        }
-
-        // <summary>
-        /// Cette méthode permet de récupérer les EV Défense que peut obtenir le pokémon adverse une fois celui-ci battu
-        /// </summary>
-        /// <returns>Récupère le gain d'EV Défense Spéciale du pokémon une fois celui-ci battu</returns>
-        public int getGainEvDefenseSpeciale()
-        {
-            return m_gain_ev_defense_speciale;
-        }
-
-        // <summary>
         /// Cette méthode permet d'initialiser les pv
         /// </summary>
         public void setPvJoueur()
@@ -1191,6 +1712,96 @@ namespace ClassLibrary
             return Pokemon[id_pokedex];
         }
        */
+
+        // Créer un pokémon après seed
+        public Pokemon createPokemonWithPokemon(Pokemon pokemon)
+        {
+            Pokemon poke = new Pokemon();
+            poke = pokemon;
+
+            return poke;
+        }
+
+            /// <summary>
+            /// Cette méthode permet de créer et d'initialiser un pokémon
+            /// </summary>
+            /// <param name=idPokemon>Id du pokémon</param>
+            /// <param name=nomAttaque1>Nom de l'attaque 1</param>
+            /// <param name=nomAttaque2>Nom de l'attaque 2</param>
+            /// <param name=nomAttaque3>Nom de l'attaque 3</param>
+            /// <param name=nomAttaque4>Nom de l'attaque 4</param>
+            /// <param name=idType>Id du type du pokémon</param>
+            /// <param name=niveau>Niveau du pokémon</param>
+            /// <param name=nature>Nature du pokémon</param>
+            /// <param name=ivPv>IV PV</param>
+            /// <param name=ivAttaque>IV Attaque</param>
+            /// <param name=ivDefense>IV Défense</param>
+            /// <param name=ivVitesse>IV Vitesse</param>
+            /// <param name=ivAttaqueSpeciale>IV Attaque Spéciale</param>
+            /// <param name=ivDefenseSpeciale>IV Defense Spéciale</param>
+            /// <param name=evPv>EV PV</param>
+            /// <param name=evAttaque>EV Attaque</param>
+            /// <param name=evDefense>EV Défense</param>
+            /// <param name=evVitesse>EV Vitesse</param>
+            /// <param name=evAttaqueSpeciale>EV Attaque Spéciale</param>
+            /// <param name=evDefenseSpeciale>EV Defense Spéciale</param>
+            /// <param name=jeu>Statistiques et données du jeu</param>
+            /// <returns>Le pokémon</returns>
+            public Pokemon createPokemonWithEspece(int idPokemon, int noIdPokedex, string nomAttaque1, string nomAttaque2, string nomAttaque3, string nomAttaque4, int idType, int niveau, string nature, int ivPv, int ivAttaque, int ivDefense, int ivVitesse, int ivAttaqueSpeciale, int ivDefenseSpeciale, int evPv, int evAttaque, int evDefense, int evVitesse, int evAttaqueSpeciale, int evDefenseSpeciale, Jeu jeu)
+        {
+            Pokemon poke = new Pokemon();
+
+            EspecePokemon especePokemon = jeu.GetEspeceWithNoId(noIdPokedex);
+
+            poke.setPokemon(especePokemon.getNom());
+            poke.setIdPokemonAvecId(idPokemon);
+            poke.setNoPokedexPokemon(especePokemon.getNoIdPokedex());
+            poke.setSexeRand(especePokemon.getProbabiliteSexeFeminin());
+            poke.setNomAttaque1(nomAttaque1);
+            poke.setNomAttaque2(nomAttaque2);
+            poke.setNomAttaque3(nomAttaque3);
+            poke.setNomAttaque4(nomAttaque4);
+            poke.setNiveau(niveau);
+            poke.setNature(nature);
+            poke.setType(especePokemon.getType());
+            poke.setTypeCourbeExperience(especePokemon.getTypeCourbeExperience());
+            poke.setGainExperiencePokemon(especePokemon.getGainExperiencePokemon());
+            poke.getExperiencePokemon();
+            poke.setTauxCapturePokemon(especePokemon.getTauxCapturePokemon());
+
+            poke.setBasePvPokemon(especePokemon.getBasePv());
+            poke.setBaseAttaque(especePokemon.getBaseAttaque());
+            poke.setBaseDefense(especePokemon.getBaseDefense());
+            poke.setBaseVitesse(especePokemon.getBaseVitesse());
+            poke.setBaseAttaqueSpeciale(especePokemon.getBaseAttaqueSpeciale());
+            poke.setBaseDefenseSpeciale(especePokemon.getBaseDefenseSpeciale());
+
+            poke.setIvPv(ivPv);
+            poke.setIvAttaque(ivAttaque);
+            poke.setIvDefense(ivDefense);
+            poke.setIvVitesse(ivVitesse);
+            poke.setIvAttaqueSpeciale(ivAttaqueSpeciale);
+            poke.setIvDefenseSpeciale(ivDefenseSpeciale);
+
+            poke.setEvPv(evPv);
+            poke.setEvAttaque(evAttaque);
+            poke.setEvDefense(evDefense);
+            poke.setEvVitesse(evVitesse);
+            poke.setEvAttaqueSpeciale(evAttaqueSpeciale);
+            poke.setEvDefenseSpeciale(evDefenseSpeciale);
+
+            poke.setGainEvPv(especePokemon.getGainEvPv());
+            poke.setGainEvAttaque(especePokemon.getGainEvAttaque());
+            poke.setGainEvDefense(especePokemon.getGainEvDefense());
+            poke.setGainEvVitesse(especePokemon.getGainEvVitesse());
+            poke.setGainEvAttaqueSpeciale(especePokemon.getGainEvAttaqueSpeciale());
+            poke.setGainEvDefenseSpeciale(especePokemon.getGainEvDefenseSpeciale());
+
+            poke.setPvRestant(poke.getPv());
+            poke.setAllAttacksWithNomOffline(jeu);
+
+            return poke;
+        }
 
         /// <summary>
         /// Cette méthode permet de créer et d'initialiser un pokémon
@@ -1312,18 +1923,37 @@ namespace ClassLibrary
 
             int index = rand.Next(liste_pokemon.Count);
 
-            return liste_pokemon[index];
+            Pokemon pokemon = liste_pokemon[index];
+            pokemon = jeu.ajoutPokemonListe(pokemon); // On va copier un pokemon random de la liste pour l'ajouter, cela permettra que les pokémon aient des stats différents entre eux
+            pokemon.setIdPokemonAvecId(jeu.countPokemonListe() + 1); // On incrémente l'id du pokemon
+            soignerPokemon(pokemon);
+
+            return pokemon;
         }
 
         /// <summary>
-        /// Cette méthode permet de retourner un pokémon à partir du nom du pokémon recherché et des données du jeu
+        /// Cette méthode permet de restaurer les pv d'un pokémon
         /// </summary>
-        /// <param name=nomPokemon>Nom du pokémon cherché</param>
-        /// <param name=jeu>Données du jeu</param>
-        /// <returns>Le pokémon cherché</returns>
-        public Pokemon setChercherPokemon(string nomPokemon, Jeu jeu)
+        public void soignerPokemon(Pokemon pokemon)
         {
-            return jeu.getListePokemon().Find(pokemon => pokemon.getNom().Equals(nomPokemon));
+            if (pokemon.getPvRestant() < pokemon.getPv() || pokemon.getPvRestant() > pokemon.getPv())
+            {
+                pokemon.setPvRestant(pokemon.getPv());
+            }
+        }
+
+    /// <summary>
+    /// Cette méthode permet de retourner un pokémon à partir du nom du pokémon recherché et des données du jeu
+    /// </summary>
+    /// <param name=nomPokemon>Nom du pokémon cherché</param>
+    /// <param name=jeu>Données du jeu</param>
+    /// <returns>Le pokémon cherché</returns>
+    public Pokemon setChercherPokemon(string nomPokemon, Jeu jeu)
+        {
+            Pokemon pokemonTrouver = jeu.getListePokemon().Find(pokemon => pokemon.getNom().Equals(nomPokemon));
+            soignerPokemon(pokemonTrouver);
+
+            return pokemonTrouver;
         }
 
         public Pokemon setChercherPokemonParNoId(int idPokemon, Jeu jeu)
@@ -1343,39 +1973,12 @@ namespace ClassLibrary
         }
 
         /// <summary>
-        /// Cette méthode permet d'initialiser la base des pv d'un pokémon
-        /// </summary>
-        /// <param name=basePv>La base pv du pokémon</param>
-        public void setBasePvPokemon(int basePv)
-        {
-            this.m_base_pv = basePv;
-        }
-
-        /// <summary>
         /// Cette méthode permet d'initialiser l'ID d'un pokémon
         /// </summary>
         /// <param name=id>L'ID du pokémon</param>
         public void setIdPokemonAvecId(int id)
         {
             this.m_id = id;
-        }
-
-        /// <summary>
-        /// Cette méthode permet le numéro du pokédex d'un pokémon
-        /// </summary>
-        /// <param name=no_id_pokedex>Numéro du pokédex du pokémon</param>
-        public void setNoPokedexPokemon(int no_id_pokedex)
-        {
-            this.m_no_id_pokedex = no_id_pokedex;
-        }
-
-        /// <summary>
-        /// Cette méthode permet d'initialiser le nom d'un pokémon
-        /// </summary>
-        /// <param name=poke>Un pokémon</param>
-        public void setPokemon(string nom)
-        {
-            this.m_nom = nom;
         }
 
         /// <summary>
@@ -1416,15 +2019,6 @@ namespace ClassLibrary
         }
 
         /// <summary>
-        /// Cette méthode permet d'initialiser le type d'un pokémon
-        /// </summary>
-        /// <param name=type>Le type du pokémon</param>
-        public void setType(string type)
-        {
-            this.m_type = type;
-        }
-
-        /// <summary>
         /// Cette méthode permet d'initialiser le niveau de chance du coup critique d'un pokémon (pour la formule)
         /// </summary>
         /// <param name=niveauCritique>Le niveau de chance de coup critique d'un pokémon</param>
@@ -1440,33 +2034,6 @@ namespace ClassLibrary
         public void setExperience(int experience)
         {
             this.m_experience = experience;
-        }
-
-        /// <summary>
-        /// Cette méthode permet d'initialiser le type de courbe d'expérience d'un pokémon
-        /// </summary>
-        /// <param name=typeCourbeExperience>Le type de courbe d'expérience du pokémon</param>
-        public void setTypeCourbeExperience(string typeCourbeExperience)
-        {
-            this.m_courbe_experience = typeCourbeExperience;
-        }
-
-        /// <summary>
-        /// Cette méthode permet d'initialiser le gain d'expérience que le pokémon adverse gagne une fois celui-ci battu (pour la formule)
-        /// </summary>
-        /// <param name=gainExperience>Gain d'expérience que le pokémon adverse gagne une fois celui-ci battu</param>
-        public void setGainExperiencePokemon(int gainExperience)
-        {
-            this.m_gain_experience = gainExperience;
-        }
-
-        /// <summary>
-        /// Cette méthode permet d'initialiser le taux de capture d'un pokémon (pour la formule)
-        /// </summary>
-        /// <param name=tauxCapture>Taux de capture utilisé dans la formule pour calculer la probabilité de capture de pokémon</param>
-        public void setTauxCapturePokemon(int tauxCapture)
-        {
-            this.m_taux_capture = tauxCapture;
         }
 
         /// <summary>
@@ -1897,51 +2464,6 @@ namespace ClassLibrary
         }
 
         /// <summary>
-        /// Cette méthode permet de définir la base de l'attaque du pokémon
-        /// </summary>
-        /// <param name=baseAttaque>Base attaque du pokémon</param>
-        public void setBaseAttaque(int baseAttaque)
-        {
-            this.m_base_attaque = baseAttaque;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir la base de la défense du pokémon
-        /// </summary>
-        /// <param name=baseDéfense>Base défense du pokémon</param>
-        public void setBaseDefense(int baseDefense)
-        {
-            this.m_base_defense = baseDefense;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir la base de la vitesse du pokémon
-        /// </summary>
-        /// <param name=baseVitesse>Base vitesse du pokémon</param>
-        public void setBaseVitesse(int baseVitesse)
-        {
-            this.m_base_vitesse = baseVitesse;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir la base de l'attaque spéciale du pokémon
-        /// </summary>
-        /// <param name=baseAttaqueSpeciale>Base attaque spéciale du pokémon</param>
-        public void setBaseAttaqueSpeciale(int baseAttaqueSpeciale)
-        {
-            this.m_base_attaque_speciale = baseAttaqueSpeciale;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir la base de la défense spéciale du pokémon
-        /// </summary>
-        /// <param name=baseDéfenseSpeciale>Base défense spéciale du pokémon</param>
-        public void setBaseDefenseSpeciale(int baseDefenseSpeciale)
-        {
-            this.m_base_defense_speciale = baseDefenseSpeciale;
-        }
-
-        /// <summary>
         /// Cette méthode permet de définir les IV PV du pokémon
         /// </summary>
         /// <param name=ivPv>IV PV du pokémon</param>
@@ -2047,60 +2569,6 @@ namespace ClassLibrary
         public void setEvDefenseSpeciale(int evDefenseSpeciale)
         {
             this.m_ev_defense_speciale = evDefenseSpeciale;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir le gain d'EV PV obtenu après avoir battu le pokémon
-        /// </summary>
-        /// <param name=gainEvPv>EV PV obtenu après avoir battu le pokémon</param>
-        public void setGainEvPv(int gainEvPv)
-        {
-            this.m_gain_ev_pv = gainEvPv;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir le gain d'EV Attaque obtenu après avoir battu le pokémon
-        /// </summary>
-        /// <param name=gainEvAttaque>EV Attaque obtenu après avoir battu le pokémon</param>
-        public void setGainEvAttaque(int gainEvAttaque)
-        {
-            this.m_gain_ev_attaque = gainEvAttaque;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir le gain d'EV Défense obtenu après avoir battu le pokémon
-        /// </summary>
-        /// <param name=gainEvDefense>EV Défense obtenu après avoir battu le pokémon</param>
-        public void setGainEvDefense(int gainEvDefense)
-        {
-            this.m_gain_ev_defense = gainEvDefense;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir le gain d'EV Vitesse obtenu après avoir battu le pokémon
-        /// </summary>
-        /// <param name=gainEvVitesse>EV Vitesse obtenu après avoir battu le pokémon</param>
-        public void setGainEvVitesse(int gainEvVitesse)
-        {
-            this.m_gain_ev_vitesse = gainEvVitesse;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir le gain d'EV Attaque Spéciale obtenu après avoir battu le pokémon
-        /// </summary>
-        /// <param name=gainEvAttaqueSpeciale>EV Attaque Spéciale obtenu après avoir battu le pokémon</param>
-        public void setGainEvAttaqueSpeciale(int gainEvAttaqueSpeciale)
-        {
-            this.m_gain_ev_attaque_speciale = gainEvAttaqueSpeciale;
-        }
-
-        /// <summary>
-        /// Cette méthode permet de définir le gain d'EV Défense Spéciale obtenu après avoir battu le pokémon
-        /// </summary>
-        /// <param name=gainEvDefenseSpeciale>EV Défense Spéciale obtenu après avoir battu le pokémon</param>
-        public void setGainEvDefenseSpeciale(int gainEvDefenseSpeciale)
-        {
-            this.m_gain_ev_defense_speciale = gainEvDefenseSpeciale;
         }
 
         /// <summary>
@@ -2531,27 +2999,27 @@ namespace ClassLibrary
         /// </summary>
         public void getExperiencePokemon()
         {
-            if (this.m_courbe_experience == "Rapide")
+            if (this.getTypeCourbeExperience() == "Rapide")
             {
                 this.m_experience = this.getExperiencePokemonCourbeRapide();
             }
-            else if (this.m_courbe_experience == "Moyenne")
+            else if (this.getTypeCourbeExperience() == "Moyenne")
             {
                 this.m_experience = this.getExperiencePokemonCourbeMoyenne();
             }
-            else if (this.m_courbe_experience == "Parabolique")
+            else if (this.getTypeCourbeExperience() == "Parabolique")
             {
                 this.m_experience = this.getExperiencePokemonCourbeParabolique();
             }
-            else if (this.m_courbe_experience == "Lente")
+            else if (this.getTypeCourbeExperience() == "Lente")
             {
                 this.m_experience = this.getExperiencePokemonCourbeLente();
             }
-            else if (this.m_courbe_experience == "Erratique")
+            else if (this.getTypeCourbeExperience() == "Erratique")
             {
                 this.m_experience = this.getExperiencePokemonCourbeErratique();
             }
-            else if (this.m_courbe_experience == "Fluctuante")
+            else if (this.getTypeCourbeExperience() == "Fluctuante")
             {
                 this.m_experience = this.getExperiencePokemonCourbeFluctuante();
             }
@@ -2567,27 +3035,27 @@ namespace ClassLibrary
         /// <returns>Expérience au niveau actuel
         public int getExperiencePokemonReturn()
         {
-            if (this.m_courbe_experience == "Rapide")
+            if (this.getTypeCourbeExperience() == "Rapide")
             {
                 return this.getExperiencePokemonCourbeRapide();
             }
-            else if (this.m_courbe_experience == "Moyenne")
+            else if (this.getTypeCourbeExperience() == "Moyenne")
             {
                 return this.getExperiencePokemonCourbeMoyenne();
             }
-            else if (this.m_courbe_experience == "Parabolique")
+            else if (this.getTypeCourbeExperience() == "Parabolique")
             {
                 return this.getExperiencePokemonCourbeParabolique();
             }
-            else if (this.m_courbe_experience == "Lente")
+            else if (this.getTypeCourbeExperience() == "Lente")
             {
                 return this.getExperiencePokemonCourbeLente();
             }
-            else if (this.m_courbe_experience == "Erratique")
+            else if (this.getTypeCourbeExperience() == "Erratique")
             {
                 return this.getExperiencePokemonCourbeErratique();
             }
-            else if (this.m_courbe_experience == "Fluctuante")
+            else if (this.getTypeCourbeExperience() == "Fluctuante")
             {
                 return this.getExperiencePokemonCourbeFluctuante();
             }
@@ -2732,27 +3200,27 @@ namespace ClassLibrary
         /// <returns>Expérience au prochain niveau
         public int getExperiencePokemonProchainNiveau()
         {
-            if (this.m_courbe_experience == "Rapide")
+            if (this.getTypeCourbeExperience() == "Rapide")
             {
                 return this.getExperiencePokemonProchainNiveauCourbeRapide();
             }
-            else if (this.m_courbe_experience == "Moyenne")
+            else if (this.getTypeCourbeExperience() == "Moyenne")
             {
                 return this.getExperiencePokemonProchainNiveauCourbeMoyenne();
             }
-            else if (this.m_courbe_experience == "Parabolique")
+            else if (this.getTypeCourbeExperience() == "Parabolique")
             {
                 return this.getExperiencePokemonProchainNiveauCourbeParabolique();
             }
-            else if (this.m_courbe_experience == "Lente")
+            else if (this.getTypeCourbeExperience() == "Lente")
             {
                 return this.getExperiencePokemonProchainNiveauCourbeLente();
             }
-            else if (this.m_courbe_experience == "Erratique")
+            else if (this.getTypeCourbeExperience() == "Erratique")
             {
                 return this.getExperiencePokemonProchainNiveauCourbeErratique();
             }
-            else if (this.m_courbe_experience == "Fluctuante")
+            else if (this.getTypeCourbeExperience() == "Fluctuante")
             {
                 return this.getExperiencePokemonProchainNiveauCourbeFluctuante();
             }
@@ -2815,6 +3283,24 @@ namespace ClassLibrary
         }
 
         /// <summary>
+        /// Cette méthode permet d'attaquer avec un sort 
+        /// </summary>
+        /// <param name=sort>Le sort</param>
+        public void attaqueAvecSort(Sort sort)
+        {
+            this.m_pv_restant = this.m_pv_restant - sort.degats;
+        }
+
+        /// <summary>
+        /// Cette méthode permet d'attaquer avec un degats défini 
+        /// </summary>
+        /// <param name=degats>Nombre de degats</param>
+        public void attaqueAvecDegat(int degats)
+        {
+            this.m_pv_restant = this.m_pv_restant - degats;
+        }
+
+        /// <summary>
         /// Cette méthode permet de retourner le type d'un pokémon (ne sert à rien)
         /// </summary>
         /// <param name=numeroType>numéro du type du pokémon</param>
@@ -2836,6 +3322,24 @@ namespace ClassLibrary
             return type.ToString();
         }
 
+    }
+
+    /// <summary> 
+    /// Classe sort
+    /// </summary>
+    [System.Serializable]
+    public class Sort
+    {
+        [DataMember]
+        public string nom { get; set; }
+        [DataMember]
+        public int degats { get; set; }
+
+        public Sort(string nomSort, int degatsSort)
+        {
+            nom = nomSort;
+            degats = degatsSort;
+        }
     }
 
     /// <summary> 

@@ -15,6 +15,11 @@ public class Dialogue
         return this.m_name;
     }
 
+    public void clearDialogue()
+    {
+        this.m_sentences.Clear();
+    }
+
     public string GetStatutDialogue()
     {
         return this.m_statut_dialogue;
